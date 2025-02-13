@@ -1,7 +1,6 @@
 ﻿namespace CleaningRobot.InterfaceAdapters
 {
-	public class Class1
-	{
-
-	}
+    public class Installer
+    {
+    }
 }

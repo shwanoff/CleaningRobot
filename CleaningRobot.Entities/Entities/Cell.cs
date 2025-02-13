@@ -1,6 +1,6 @@
 ﻿using CleaningRobot.Entities.Enums;
 
-namespace CleaningRobot.Entities
+namespace CleaningRobot.Entities.Entities
 {
 	/// <summary>
 	/// Represents a cell in the room

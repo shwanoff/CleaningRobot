@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CleaningRobot.Entities\CleaningRobot.Entities.csproj" />
+  </ItemGroup>
+
 </Project>

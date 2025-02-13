@@ -1,6 +1,6 @@
 ﻿using CleaningRobot.Entities.Enums;
 
-namespace CleaningRobot.Entities
+namespace CleaningRobot.Entities.Entities
 {
 	/// <summary>
 	/// Represents the map of the environment
