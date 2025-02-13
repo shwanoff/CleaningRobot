@@ -2,7 +2,10 @@
 
 namespace CleaningRobot.Entities.Enums
 {
-    public enum Cell
+	/// <summary>
+	/// Represents the type of the cell
+	/// </summary>
+	public enum CellType
     {
 		[Description("S")]
 		CleanableSpace,

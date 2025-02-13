@@ -38,5 +38,10 @@ namespace CleaningRobot.Entities
 		public Robot() : this(0, 0, Facing.North, 100)
 		{
 		}
+
+		public override string ToString()
+		{
+			return $"({X}, {Y}) Facing: {Facing}, Battery: {Battery}";
+		}
 	}
 }
