@@ -5,27 +5,27 @@ namespace CleaningRobot.Tests.Entities.Extensions
 {
 	public class CommandExtensionsTests
 	{
-		[TestCase("TL", Command.TurnLeft)]
-		[TestCase("TR", Command.TurnRight)]
-		[TestCase("A", Command.Advance)]
-		[TestCase("B", Command.Back)]
-		[TestCase("C", Command.Clean)]
-		[TestCase("TurnLeft", Command.TurnLeft)]
-		[TestCase("Turn Right", Command.TurnRight)]
-		[TestCase("Advance", Command.Advance)]
-		[TestCase("Back", Command.Back)]
-		[TestCase("Clean", Command.Clean)]
-		[TestCase("tl", Command.TurnLeft)]
-		[TestCase("tr", Command.TurnRight)]
-		[TestCase("a", Command.Advance)]
-		[TestCase("b", Command.Back)]
-		[TestCase("c", Command.Clean)]
-		[TestCase("turnleft", Command.TurnLeft)]
-		[TestCase("turn right", Command.TurnRight)]
-		[TestCase("advance", Command.Advance)]
-		[TestCase("back", Command.Back)]
-		[TestCase("clean", Command.Clean)]
-		public void ToCommand_String_ValidInput_ReturnsExpectedCommand(string input, Command expected)
+		[TestCase("TL", CommandType.TurnLeft)]
+		[TestCase("TR", CommandType.TurnRight)]
+		[TestCase("A", CommandType.Advance)]
+		[TestCase("B", CommandType.Back)]
+		[TestCase("C", CommandType.Clean)]
+		[TestCase("TurnLeft", CommandType.TurnLeft)]
+		[TestCase("Turn Right", CommandType.TurnRight)]
+		[TestCase("Advance", CommandType.Advance)]
+		[TestCase("Back", CommandType.Back)]
+		[TestCase("Clean", CommandType.Clean)]
+		[TestCase("tl", CommandType.TurnLeft)]
+		[TestCase("tr", CommandType.TurnRight)]
+		[TestCase("a", CommandType.Advance)]
+		[TestCase("b", CommandType.Back)]
+		[TestCase("c", CommandType.Clean)]
+		[TestCase("turnleft", CommandType.TurnLeft)]
+		[TestCase("turn right", CommandType.TurnRight)]
+		[TestCase("advance", CommandType.Advance)]
+		[TestCase("back", CommandType.Back)]
+		[TestCase("clean", CommandType.Clean)]
+		public void ToCommand_String_ValidInput_ReturnsExpectedCommand(string input, CommandType expected)
 		{
 			// Act
 			var result = input.ToCommand();

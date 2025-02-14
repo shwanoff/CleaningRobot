@@ -2,7 +2,7 @@
 {
     public interface IJsonAdapter
     {
-		string Serialize<T>(T item);
-		T Deserialize<T>(string json);
+		bool TrySerialize<T>(T item, out string result);
+		bool TryDeserialize<T>(string json, out T result);
 	}
 }

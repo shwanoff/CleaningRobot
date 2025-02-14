@@ -1,39 +1,53 @@
-﻿using CleaningRobot.Entities.Enums;
-using CleaningRobot.UseCases.Interfaces;
+﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Enums;
+using CleaningRobot.UseCases.Dto;
+using CleaningRobot.UseCases.Interfaces.Controllers;
+using CleaningRobot.UseCases.Interfaces.Operations;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-    public class RobotController : IRobotController
+    public class RobotController : IRobotController, IRobotOperation
 	{
 		public void ExecuteCommand(Command command)
 		{
-			switch (command)
+			switch (command.CommandType)
 			{
-				case Command.TurnLeft:
+				case CommandType.TurnLeft:
 					TurnLeft();
 					break;
-				case Command.TurnRight:
+				case CommandType.TurnRight:
 					TurnRight();
 					break;
-				case Command.Advance:
+				case CommandType.Advance:
 					Advance();
 					break;
-				case Command.Back:
+				case CommandType.Back:
 					Back();
 					break;
-				case Command.Clean:
+				case CommandType.Clean:
 					Clean();
 					break;
 				default:
-					throw new ArgumentException($"Command '{command}' is invalid. Valid values are: TL, TR, A, B, C, TurnLeft, Turn Right, Advance, Back, Clean");
+					throw new ArgumentException($"CommandType '{command}' is invalid. Valid values are: TL, TR, A, B, C, TurnLeft, Turn Right, Advance, Back, Clean");
 			}
 		}
 
-		public void ValidateCommand(Command command)
+		public bool ValidateCommand(Command command, out string error)
 		{
 			throw new NotImplementedException();
 		}
 
+		public void Create(int x, int y, string facing, int battery)
+		{
+			throw new NotImplementedException();
+		}
+
+		public RobotStatusDto GetCurrentStatus()
+		{
+			throw new NotImplementedException();
+		}
+
+		#region Private methods
 		private void TurnLeft()
 		{
 			throw new NotImplementedException();
@@ -58,5 +72,6 @@ namespace CleaningRobot.UseCases.Controllers
 		{
 			throw new NotImplementedException();
 		}
+		#endregion
 	}
 }
