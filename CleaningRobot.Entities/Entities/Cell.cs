@@ -6,7 +6,7 @@ namespace CleaningRobot.Entities.Entities
 	/// Represents a cell in the room
 	/// </summary>
 	/// <param name="x"> Position on X </param>
-	/// <param name="y"> Position on Y</param>
+	/// <param name="y"> Position on Y </param>
 	/// <param name="type"> Cell type </param>
 	public class Cell(int x, int y, CellType type)
 	{

@@ -9,17 +9,17 @@ namespace CleaningRobot.Entities.Entities
 	/// <param name="y"> Row </param>
 	/// <param name="facing"> Direction </param>
 	/// <param name="battery"> Battery level </param>
-	public class Robot(int x, int y, Facing facing, int battery)
+	public class Robot(uint x, uint y, Facing facing, uint battery)
 	{
 		/// <summary>
 		/// Column
 		/// </summary>
-		public int X { get; set; } = x;
+		public uint X { get; set; } = x;
 
 		/// <summary>
 		/// Row
 		/// </summary>
-		public int Y { get; set; } = y;
+		public uint Y { get; set; } = y;
 
 		/// <summary>
 		/// Direction
@@ -29,7 +29,7 @@ namespace CleaningRobot.Entities.Entities
 		/// <summary>
 		/// Battery level
 		/// </summary>
-		public int Battery { get; set; } = battery;
+		public uint Battery { get; set; } = battery;
 
 		/// <summary>
 		/// Default initialization of the robot. 

@@ -11,22 +11,22 @@ namespace CleaningRobot.Entities.Entities
 		/// <summary>
 		/// Width of the map
 		/// </summary>
-		public int Width
+		public uint Width
 		{
 			get
 			{
-				return Cells.GetLength(0);
+				return (uint)Cells.GetLength(0);
 			}
 		}
 
 		/// <summary>
 		/// Height of the map
 		/// </summary>
-		public int Height
+		public uint Height
 		{
 			get
 			{
-				return Cells.GetLength(1);
+				return (uint)Cells.GetLength(1);
 			}
 		}
 

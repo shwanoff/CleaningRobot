@@ -1,7 +1,18 @@
 ﻿namespace CleaningRobot.InterfaceAdapters.Dto
 {
-    public class RobotPositionDto : PositionDto
+	/// <summary>
+	/// Data transfer object for robot position
+	/// </summary>
+	public class RobotPositionDto : PositionDto
     {
-		public string Facing { get; set; }
+		/// <summary>
+		/// Direction
+		/// </summary>
+		public required string Facing { get; set; }
+
+		override public string ToString()
+		{
+			return $"({X}, {Y}) Facing: {Facing}";
+		}
 	}
 }

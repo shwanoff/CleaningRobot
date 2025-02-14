@@ -6,7 +6,7 @@ using CleaningRobot.UseCases.Interfaces.Operations;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-    public class RobotController : IRobotController, IRobotOperation
+    internal class RobotController : IRobotController, IRobotOperation
 	{
 		public void ExecuteCommand(Command command)
 		{

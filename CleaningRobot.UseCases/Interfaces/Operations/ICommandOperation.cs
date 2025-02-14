@@ -3,16 +3,10 @@
 namespace CleaningRobot.UseCases.Interfaces.Operations
 {
 	/// <summary>
-	/// Map operation interface. Responsible for internal map operations
+	/// Command operation interface. Responsible for internal command operations
 	/// </summary>
-	internal interface IMapOperation
-	{
-		/// <summary>
-		/// Updates the map based on the given command.
-		/// </summary>
-		/// <param name="command">The command to update the map with.</param>
-		void Update(Command command);
-
+	internal interface ICommandOperation
+    {
 		/// <summary>
 		/// Validates the given command.
 		/// </summary>
