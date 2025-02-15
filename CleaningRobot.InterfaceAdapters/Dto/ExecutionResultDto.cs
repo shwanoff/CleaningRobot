@@ -19,10 +19,5 @@
 			Result = null;
 			Error = error;
 		}
-
-		public override string ToString()
-		{
-			return Success ? Result ?? "Success" : Error?.Message ?? "Unknown error";
-		}
 	}
 }
