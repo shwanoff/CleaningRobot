@@ -1,5 +1,4 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Enums;
+﻿using CleaningRobot.Entities.Enums;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases.Dto;
@@ -7,15 +6,6 @@ using CleaningRobot.UseCases.Interfaces.Controllers;
 
 namespace CleaningRobot.InterfaceAdapters
 {
-	/// <summary>
-	/// Orchestrates the robot cleaning process
-	/// </summary>
-	/// <param name="robotController"> Controll robot state </param>
-	/// <param name="mapController"> Controll map state </param>
-	/// <param name="commandController"> Controll command list state </param>
-	/// <param name="fileAdapter"> Controll work with file system </param>
-	/// <param name="jsonAdapter"> Controll work with JSON files </param>
-	/// <param name="logAdapter"> Controll logging </param>
 	public class RobotOrchestrator(
 		IRobotController robotController,
 		IMapController mapController,
@@ -32,14 +22,8 @@ namespace CleaningRobot.InterfaceAdapters
 		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly ILogAdapter _logAdapter = logAdapter;
 
-		private readonly bool _writeTraceLog = false;
+		private readonly bool _writeTraceLog = false; // TODO: Get from configuration
 
-		/// <summary>
-		/// Execute the robot cleaning process
-		/// </summary>
-		/// <param name="inputFilePath"> Path to input JSON file with map, commands and robot parameters </param>
-		/// <param name="outputFilePath"> Path to output JSON file with list of cleaned/visited points and robot status at the end </param>
-		/// <returns> Results of execution list of cleaned/visited points and robot status, same as in output file </returns>
 		public ExecutionResultDto Execute(string inputFilePath, string outputFilePath)
 		{
 			try
@@ -77,13 +61,6 @@ namespace CleaningRobot.InterfaceAdapters
 		}
 
 		#region Private methods
-		/// <summary>
-		/// Save output to file
-		/// </summary>
-		/// <param name="outputFilePath"> Path to the output file </param>
-		/// <param name="result"> Serialized result data </param>
-		/// <param name="replace"> Flag indicating whether to replace the existing file </param>
-		/// <exception cref="ArgumentException"> Thrown when there is an error writing to the file </exception>
 		private void SaveOutput(string outputFilePath, string result, bool replace)
 		{
 			Trace($"Writing output to file '{outputFilePath}'");
@@ -96,12 +73,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace($"Output written to file '{outputFilePath}'");
 		}
 
-		/// <summary>
-		/// Serialize output data
-		/// </summary>
-		/// <param name="outputData"> Data to be serialized </param>
-		/// <returns> Serialized string of output data </returns>
-		/// <exception cref="ArgumentException"> Thrown when there is an error during serialization </exception>
 		private string Serialize(OutputDataDto outputData)
 		{
 			Trace("Serializing output data");
@@ -116,13 +87,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return result;
 		}
 
-		/// <summary>
-		/// Create output data
-		/// </summary>
-		/// <param name="visitedCells"> List of cells visited by the robot </param>
-		/// <param name="cleanedCells"> List of cells cleaned by the robot </param>
-		/// <param name="robot"> Current status of the robot </param>
-		/// <returns> Data transfer object containing the output data </returns>
 		private OutputDataDto CreateOutputData(IEnumerable<CellStatusDto> visitedCells, IEnumerable<CellStatusDto> cleanedCells, RobotStatusDto robot)
 		{
 			Trace("Creating output data");
@@ -140,10 +104,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return outputData;
 		}
 
-		/// <summary>
-		/// Create commands list
-		/// </summary>
-		/// <param name="inputData"> Input data containing the commands </param>
 		private void CreateCommandsList(InputDataDto inputData)
 		{
 			Trace("Creating commands list");
@@ -153,10 +113,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace("Commands list created");
 		}
 
-		/// <summary>
-		/// Create map
-		/// </summary>
-		/// <param name="inputData"> Input data containing the map information </param>
 		private void CreateMap(InputDataDto inputData)
 		{
 			Trace("Creating map");
@@ -166,10 +122,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace("Map created");
 		}
 
-		/// <summary>
-		/// Create robot
-		/// </summary>
-		/// <param name="inputData"> Input data containing the robot's initial position and battery level </param>
 		private void CreateRobot(InputDataDto inputData)
 		{
 			Trace("Creating robot");
@@ -179,10 +131,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace("Robot created");
 		}
 
-		/// <summary>
-		/// Execute commands
-		/// </summary>
-		/// <param name="runAll"> Flag indicating whether to run all commands at once or one by one </param>
 		private void ExecuteCommands(bool runAll)
 		{
 			if (runAll)
@@ -195,9 +143,6 @@ namespace CleaningRobot.InterfaceAdapters
 			}
 		}
 
-		/// <summary>
-		/// Execute all commands at once
-		/// </summary>
 		private void ExecuteAllCommands()
 		{
 			Trace("Executing all commands");
@@ -207,9 +152,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace("All commands executed");
 		}
 
-		/// <summary>
-		/// Execute commands one by one
-		/// </summary>
 		private void ExecuteCommandsOneByOne()
 		{
 			CommandStatusDto? command;
@@ -230,10 +172,6 @@ namespace CleaningRobot.InterfaceAdapters
 			while (command != null);
 		}
 
-		/// <summary>
-		/// Get robot status
-		/// </summary>
-		/// <returns>Current status of the robot</returns>
 		private RobotStatusDto GetRobotStatus()
 		{
 			var robot = _robotController.GetCurrentStatus();
@@ -243,10 +181,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return robot;
 		}
 
-		/// <summary>
-		/// Get all cells status
-		/// </summary>
-		/// <returns>List of all cell statuses</returns>
 		private IEnumerable<CellStatusDto> GetAllCells()
 		{
 			var cells = _mapController.GetAllCellStatuses();
@@ -256,11 +190,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return cells;
 		}
 
-		/// <summary>
-		/// Get visited cells
-		/// </summary>
-		/// <param name="cells"> List of all cell statuses </param>
-		/// <returns> List of cells visited by the robot </returns>
 		private IEnumerable<CellStatusDto> GetVisitedCells(IEnumerable<CellStatusDto> cells)
 		{
 			var visitedCells = cells.Where(c => c.State == CellState.Visited);
@@ -270,11 +199,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return visitedCells;
 		}
 
-		/// <summary>
-		/// Get cleaned cells
-		/// </summary>
-		/// <param name="cells"> List of all cell statuses </param>
-		/// <returns> List of cells cleaned by the robot </returns>
 		private IEnumerable<CellStatusDto> GetCleanedCells(IEnumerable<CellStatusDto> cells)
 		{
 			var cleanedCells = cells.Where(c => c.State == CellState.Cleaned);
@@ -284,15 +208,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return cleanedCells;
 		}
 
-		/// <summary>
-		/// Validate input data
-		/// </summary>
-		/// <summary>
-		/// Validate input data
-		/// </summary>
-		/// <param name="filePath"> Path to the file </param>
-		/// <param name="mustExist"> Flag indicating whether the file must exist </param>
-		/// <exception cref="ArgumentException"> Thrown when the file path is invalid or the file does not exist </exception>
 		private void ValidateInput(string filePath, bool mustExist = false)
 		{
 			if (string.IsNullOrWhiteSpace(filePath))
@@ -313,15 +228,6 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace($"Input file path validated successfully: {filePath}");
 		}
 
-		/// <summary>
-		/// Read file content
-		/// </summary>
-		/// <summary>
-		/// Read file content
-		/// </summary>
-		/// <param name="filePath"> Path to the file </param>
-		/// <returns> Content of the file as a string </returns>
-		/// <exception cref="ArgumentException"> Thrown when there is an error reading the file </exception>
 		private string ReadFile(string filePath)
 		{
 			Trace($"Reading file '{filePath}'");
@@ -336,12 +242,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return fileContent;
 		}
 
-		/// <summary>
-		/// Deserialize input data
-		/// </summary>
-		/// <param name="fileContent"> Content of the input file </param>
-		/// <returns> Deserialized input data </returns>
-		/// <exception cref="ArgumentException"> Thrown when there is an error during deserialization </exception>
 		private InputDataDto Deserialize(string fileContent)
 		{
 			Trace("Deserializing input data");
@@ -356,10 +256,6 @@ namespace CleaningRobot.InterfaceAdapters
 			return inputData;
 		}
 
-		/// <summary>
-		/// Write trace message
-		/// </summary>
-		/// <param name="message"> Trace message to be logged </param>
 		private void Trace(string message)
 		{
 			if (_writeTraceLog)

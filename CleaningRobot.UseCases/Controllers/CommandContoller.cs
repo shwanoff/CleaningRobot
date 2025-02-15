@@ -3,26 +3,17 @@ using CleaningRobot.Entities.Enums;
 using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto;
 using CleaningRobot.UseCases.Interfaces.Controllers;
-using CleaningRobot.UseCases.Interfaces.Operations;
+using CleaningRobot.UseCases.Interfaces.Operators;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-	/// <summary>
-	/// Command controller. Responsible for external and internal command operations
-	/// </summary>
-	/// <param name="robotOperation">The robot operation interface</param>
-	/// <param name="mapOperation">The map operation interface</param>
-	internal class CommandContoller(IRobotOperation robotOperation, IMapOperation mapOperation) : ICommandController, ICommandOperation
+	internal class CommandContoller(IRobotOperator robotOperation, IMapOperator mapOperation) : ICommandController, ICommandOperator
 	{
-		private readonly IRobotOperation _robotOperation = robotOperation;
-		private readonly IMapOperation _mapOperation = mapOperation;
+		private readonly IRobotOperator _robotOperation = robotOperation;
+		private readonly IMapOperator _mapOperation = mapOperation;
 
 		private Queue<Command> commandQueue = [];
 
-		/// <summary>
-		/// Creates commands from a collection of command strings
-		/// </summary>
-		/// <param name="commands">A collection of command strings to be created</param>
 		public void Create(IEnumerable<string> commands)
 		{
 			foreach (var command in commands)
@@ -38,9 +29,6 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Executes all commands in the queue
-		/// </summary>
 		public void ExcecuteAll()
 		{
 			while (commandQueue.Count != 0)
@@ -49,10 +37,6 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Executes the next command in the queue
-		/// </summary>
-		/// <returns>Returns the status of the executed command</returns>
 		public CommandStatusDto ExecuteNext()
 		{
 			var command = commandQueue.Dequeue();
@@ -75,15 +59,13 @@ namespace CleaningRobot.UseCases.Controllers
 			_robotOperation.ExecuteCommand(command);
 			_mapOperation.Update(command);
 
-			return new CommandStatusDto(command.CommandType, command.ConsumedEnergy);
+			return new CommandStatusDto()
+			{ 
+				CommandType = command.CommandType, 
+				ConsumedEnergy = command.ConsumedEnergy 
+			};
 		}
 
-		/// <summary>
-		/// Validates the given command
-		/// </summary>
-		/// <param name="command">The command to validate</param>
-		/// <param name="error">The error message if the command is invalid</param>
-		/// <returns>True if the command is valid, otherwise false</returns>
 		public bool ValidateCommand(Command command, out string? error)
 		{
 			error = null;

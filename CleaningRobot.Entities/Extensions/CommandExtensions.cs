@@ -2,17 +2,8 @@
 
 namespace CleaningRobot.Entities.Extensions
 {
-	/// <summary>
-	/// Extension methods for the CommandType enum
-	/// </summary>
 	public static class CommandExtensions
     {
-		/// <summary>
-		/// Converts a string to a CommandType enum
-		/// </summary>
-		/// <param name="command"> The command code as a string (TL, TR, A, B, C) or full name (TurnLeft, Turn Right, Advance, Back, Clean) </param>
-		/// <returns> The corresponding CommandType enum value </returns>
-		/// <exception cref="ArgumentException"> Thrown when the command code is invalid </exception>
 		public static CommandType ToCommand(this string command)
 		{
 			string normalizedCommand = command.Replace(" ", "").ToUpper();

@@ -2,9 +2,6 @@
 
 namespace CleaningRobot.Entities.Enums
 {
-	/// <summary>
-	/// Represents the facing of the robot
-	/// </summary>
 	public enum Facing
 	{
 		[Description("N")]

@@ -2,9 +2,6 @@
 
 namespace CleaningRobot.Entities.Enums
 {
-	/// <summary>
-	/// Represents command types that the robot can execute
-	/// </summary>
 	public enum CommandType
     {
 		[Description("TL")]

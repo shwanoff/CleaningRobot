@@ -2,14 +2,17 @@
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto;
+using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces.Controllers;
-using CleaningRobot.UseCases.Interfaces.Operations;
+using CleaningRobot.UseCases.Interfaces.Operators;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-	public class MapController : IMapController, IMapOperation
+	internal class MapController(IRobotOperator robotOperation) : IMapController, IMapOperator
 	{
-		private readonly IRobotController _robotController;
+		private bool IsMapCreated => _map != null;
+
+		private readonly IRobotOperator _robotOperation = robotOperation;
 
 		private Map _map;
 
@@ -20,14 +23,19 @@ namespace CleaningRobot.UseCases.Controllers
 
 		public IEnumerable<CellStatusDto> GetAllCellStatuses()
 		{
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
 			for (int y = 0; y < _map.Height; y++)
 			{
 				for (int x = 0; x < _map.Width; x++)
 				{
 					yield return new CellStatusDto
 					{
-						X = y,
-						Y = x,
+						X = x,
+						Y = y,
 						Type = _map.Cells[y, x].Type,
 						State = _map.Cells[y, x].State
 					};
@@ -35,19 +43,38 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 		}
 
+		public Cell GetCellStatus(int x, int y)
+		{
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
+			return _map.Cells[x, y];
+		}
+
 		public void Update(Command command)
 		{
+			if (command == null)
+			{
+				throw new ArgumentNullException(nameof(command), "Command cannot be null");
+			}
+
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
 			if (ValidateCommand(command, out string? error))
 			{
-				var cell = GetCurrentRobotCell();
 				switch (command.CommandType)
 				{
 					case CommandType.Clean:
-						Clean(cell);
+						Clean();
 						break;
 					case CommandType.Advance:
 					case CommandType.Back:
-						Visit(cell);
+						Visit();
 						break;
 				}
 			}
@@ -61,7 +88,15 @@ namespace CleaningRobot.UseCases.Controllers
 		{
 			error = null;
 
-			ArgumentNullException.ThrowIfNull(command);
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
+			if (command == null)
+			{
+				throw new ArgumentNullException(nameof(command), "Command cannot be null");
+			}
 
 			switch (command.CommandType)
 			{
@@ -71,16 +106,81 @@ namespace CleaningRobot.UseCases.Controllers
 					return true;
 				case CommandType.Advance:
 				case CommandType.Back:
-					var cell = GetCurrentRobotCell();
-					return true;
-					break;
+					return IsNextCellAwailable(command, out error);
 				default:
 					error = $"CommandType '{command.CommandType}' is invalid";
 					return false;
 			}
 		}
 
-		private Cell[,] ConvertToRectangularArray(string[][] jaggedArray)
+		public int GetMapWidth()
+		{
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
+			return _map.Width;
+		}
+
+		public int GetMapHeight()
+		{
+			if (!IsMapCreated)
+			{
+				throw new InvalidOperationException("The map has not been created yet");
+			}
+
+			return _map.Height;
+		}
+
+		private Cell GetCurrentRobotCell()
+		{
+			var robotPosition = _robotOperation.GetRobotPosition();
+			return _map.Cells[robotPosition.X, robotPosition.Y];
+		}
+
+		private void Clean()
+		{
+			var cell = GetCurrentRobotCell();
+			_map.Cells[cell.Position.X, cell.Position.Y].State = CellState.Cleaned;
+		}
+
+		private void Visit()
+		{
+			var cell = GetCurrentRobotCell();
+			_map.Cells[cell.Position.X, cell.Position.Y].State = CellState.Visited;
+		}
+
+		private bool IsNextCellAwailable(Command command, out string? error)
+		{
+			error = null;
+			var robotPosition = _robotOperation.GetRobotPosition();
+			var nextPositon = PositionHelper.GetNextPosition(robotPosition, command.CommandType);
+
+			if (nextPositon.X < 0 || nextPositon.X >= _map.Width || nextPositon.Y < 0 || nextPositon.Y >= _map.Height)
+			{
+				error = "The robot cannot move outside the map";
+				return false;
+			}
+
+			var nextCell = _map.Cells[nextPositon.X, nextPositon.Y];
+
+			if (nextCell.Type == CellType.Wall)
+			{
+				error = "The robot cannot move into a wall";
+				return false;
+			}
+
+			if (nextCell.Type == CellType.Column)
+			{
+				error = "The robot cannot move into a column";
+				return false;
+			}
+
+			return true;
+		}
+
+		private static Cell[,] ConvertToRectangularArray(string[][] jaggedArray)
 		{
 			int rows = jaggedArray.Length;
 			int cols = jaggedArray.Max(row => row.Length);
@@ -95,27 +195,6 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 
 			return rectangularArray;
-		}
-
-		private void Clean(Cell cell)
-		{
-			_map.Cells[cell.X, cell.Y].State = CellState.Cleaned;
-		}
-
-		private void Visit(Cell cell)
-		{
-			_map.Cells[cell.X, cell.Y].State = CellState.Visited;
-		}
-
-		private bool IsNextCellAwailable(Cell currentCell, Command command)
-		{
-			throw new NotImplementedException();
-		}
-
-		private Cell GetCurrentRobotCell()
-		{
-			var robot = _robotController.GetCurrentStatus();
-			return _map.Cells[robot.X, robot.Y];
 		}
 	}
 }

@@ -2,15 +2,10 @@
 
 namespace CleaningRobot.UseCases.Dto
 {
-    public class CommandStatusDto(CommandType commandType, uint consumedEnergy)
+    public class CommandStatusDto
 	{
-		public CommandType CommandType { get; set; } = commandType;
+		public CommandType CommandType { get; set; }
 
-		public uint ConsumedEnergy { get; set; } = consumedEnergy;
-
-		override public string ToString()
-		{
-			return $"CommandType: {CommandType}, ConsumedEnergy: {ConsumedEnergy}";
-		}
+		public int ConsumedEnergy { get; set; }
 	}
 }

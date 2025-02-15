@@ -2,17 +2,8 @@
 
 namespace CleaningRobot.Entities.Extensions
 {
-	/// <summary>
-	/// Extension methods for the Cell enums
-	/// </summary>
 	public static class CellExtensions
 	{
-		/// <summary>
-		/// Converts a string to a CellType enum
-		/// </summary>
-		/// <param name="cellType"> The cell type code as a string (S, C, W, null) or full name (CleanableSpace, Column, Wall) </param>
-		/// <returns> The corresponding CellType enum value </returns>
-		/// <exception cref="ArgumentException"> Thrown when the cellType type code is invalid </exception>
 		public static CellType ToCellType(this string cellType)
 		{
 			if (string.IsNullOrWhiteSpace(cellType))
@@ -34,13 +25,6 @@ namespace CleaningRobot.Entities.Extensions
 				_ => throw new ArgumentException($"CellType '{cellType}' is invalid. Valid values are: S, C, W, CleanableSpace, Column, Wall, null")
 			};
 		}
-
-		/// <summary>
-		/// Converts a string to a CellState enum
-		/// </summary>
-		/// <param name="cellState"> The cell state code as a string (N, V, C) or full name (NotVisited, Visited, Cleaned) </param>
-		/// <returns> The corresponding CellState enum value </returns>
-		/// <exception cref="ArgumentException"> Thrown when the cell state code is invalid </exception>
 
 		public static CellState ToCellState(this string cellState)
 		{
