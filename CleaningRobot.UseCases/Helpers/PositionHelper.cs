@@ -3,8 +3,8 @@ using CleaningRobot.Entities.Enums;
 
 namespace CleaningRobot.UseCases.Helpers
 {
-    internal static class PositionHelper
-    {
+	internal static class PositionHelper
+	{
 		internal static Position GetNextPosition(RobotPosition position, CommandType commandType)
 		{
 			return commandType switch

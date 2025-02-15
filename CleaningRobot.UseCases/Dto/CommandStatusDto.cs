@@ -2,7 +2,7 @@
 
 namespace CleaningRobot.UseCases.Dto
 {
-    public class CommandStatusDto
+	public class CommandStatusDto
 	{
 		public CommandType CommandType { get; set; }
 

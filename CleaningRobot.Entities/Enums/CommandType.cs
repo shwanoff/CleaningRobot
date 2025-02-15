@@ -3,7 +3,7 @@
 namespace CleaningRobot.Entities.Enums
 {
 	public enum CommandType
-    {
+	{
 		[Description("TL")]
 		TurnLeft,
 		[Description("TR")]

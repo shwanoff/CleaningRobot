@@ -1,12 +1,12 @@
 ﻿namespace CleaningRobot.InterfaceAdapters.Dto
 {
 	public class ExecutionResultDto
-    {
+	{
 		public bool Success { get; set; }
 		public string? Result { get; set; }
 		public Exception? Error { get; set; }
 
-		public ExecutionResultDto(string result) 
+		public ExecutionResultDto(string result)
 		{
 			Success = true;
 			Result = result;

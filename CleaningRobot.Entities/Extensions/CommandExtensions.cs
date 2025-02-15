@@ -3,7 +3,7 @@
 namespace CleaningRobot.Entities.Extensions
 {
 	public static class CommandExtensions
-    {
+	{
 		public static CommandType ToCommand(this string command)
 		{
 			string normalizedCommand = command.Replace(" ", "").ToUpper();

@@ -12,7 +12,7 @@ namespace CleaningRobot.InterfaceAdapters
 		ICommandController commandController,
 		IFileAdapter fileAdapter,
 		IJsonAdapter jsonAdapter,
-		ILogAdapter logAdapter) 
+		ILogAdapter logAdapter)
 		: IRobotOrchestrator
 	{
 		private readonly IRobotController _robotController = robotController;

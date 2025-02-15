@@ -3,7 +3,7 @@
 namespace CleaningRobot.Entities.Enums
 {
 	public enum CellState
-    {
+	{
 		[Description("N")]
 		NotVisited,
 		[Description("V")]

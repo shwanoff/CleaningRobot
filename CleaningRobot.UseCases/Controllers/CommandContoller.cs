@@ -60,9 +60,9 @@ namespace CleaningRobot.UseCases.Controllers
 			_mapOperation.Update(command);
 
 			return new CommandStatusDto()
-			{ 
-				CommandType = command.CommandType, 
-				ConsumedEnergy = command.ConsumedEnergy 
+			{
+				CommandType = command.CommandType,
+				ConsumedEnergy = command.ConsumedEnergy
 			};
 		}
 

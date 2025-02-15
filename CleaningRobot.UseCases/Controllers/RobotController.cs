@@ -8,12 +8,12 @@ using CleaningRobot.UseCases.Interfaces.Operators;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-	internal class RobotController : IRobotController, IRobotOperator
+	internal class RobotController(IMapOperator mapOperation) : IRobotController, IRobotOperator
 	{
+		private readonly IMapOperator _mapOperation = mapOperation;
+
 		private bool IsRobotCreated => _robot != null;
-
-		private readonly IMapOperator _mapOperation;
-
+		
 		private Robot _robot;
 
 		public void Create(int x, int y, string facing, int battery)
@@ -129,7 +129,7 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 		}
 
-		
+
 
 		#region Private methods
 		private void TurnLeft(int energy)
