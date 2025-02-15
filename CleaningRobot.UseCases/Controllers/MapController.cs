@@ -90,12 +90,14 @@ namespace CleaningRobot.UseCases.Controllers
 
 			if (!IsMapCreated)
 			{
-				throw new InvalidOperationException("The map has not been created yet");
+				error = "The map has not been created yet";
+				return false;
 			}
 
 			if (command == null)
 			{
-				throw new ArgumentNullException(nameof(command), "Command cannot be null");
+				error = "Command cannot be null";
+				return false;
 			}
 
 			switch (command.CommandType)

@@ -77,12 +77,14 @@ namespace CleaningRobot.UseCases.Controllers
 
 			if (!IsRobotCreated)
 			{
-				throw new InvalidOperationException("The robot has not been created yet");
+				error = "The robot has not been created yet";
+				return false;
 			}
 
 			if (command == null)
 			{
-				throw new ArgumentNullException(nameof(command), "Command cannot be null");
+				error = "Command cannot be null";
+				return false;
 			}
 
 			return IsEnoughBattery(command, out error);

@@ -11,8 +11,4 @@
     <ProjectReference Include="..\CleaningRobot.UseCases\CleaningRobot.UseCases.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Adapters\" />
-  </ItemGroup>
-
 </Project>

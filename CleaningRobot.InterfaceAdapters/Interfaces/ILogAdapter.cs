@@ -5,5 +5,6 @@
 		void Info(string message);
 		void Warning(string message);
 		void Error(string message, Exception? exception = null);
+		void Setup(string connectionString);
 	}
 }
