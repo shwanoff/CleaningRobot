@@ -4,6 +4,6 @@ namespace CleaningRobot.InterfaceAdapters.Interfaces
 {
 	public interface IRobotOrchestrator
 	{
-		ExecutionResultDto Execute(string inputFilePath, string outputFilePath);
+		Task<ExecutionResultDto> ExecuteAsync(string inputFilePath, string outputFilePath);
 	}
 }

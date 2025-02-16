@@ -1,7 +1,7 @@
 ﻿using CleaningRobot.Entities.Enums;
 using CleaningRobot.Entities.Extensions;
 
-namespace CleaningRobot.Tests.Entities.Extensions
+namespace CleaningRobot.Tests.UnitTests.Entities.Extensions
 {
 	public class CellExtensionsTests
 	{

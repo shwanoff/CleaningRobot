@@ -2,9 +2,9 @@
 {
 	public interface ILogAdapter
 	{
-		void Info(string message);
-		void Warning(string message);
-		void Error(string message, Exception? exception = null);
-		void Setup(string connectionString);
+		Task InfoAsync(string message, Guid executionId);
+		Task WarningAsync(string message, Guid executionId);
+		Task ErrorAsync(string message, Guid executionId, Exception? exception = null);
+		Task SetupAsync(string connectionString);
 	}
 }

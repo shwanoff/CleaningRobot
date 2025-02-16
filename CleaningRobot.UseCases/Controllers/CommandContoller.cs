@@ -1,94 +1,41 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Enums;
-using CleaningRobot.Entities.Extensions;
-using CleaningRobot.UseCases.Dto;
+﻿using CleaningRobot.Entities.Extensions;
+using CleaningRobot.UseCases.Dto.Input;
+using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Handlers.Commands;
 using CleaningRobot.UseCases.Interfaces.Controllers;
-using CleaningRobot.UseCases.Interfaces.Operators;
+using MediatR;
 
 namespace CleaningRobot.UseCases.Controllers
 {
-	internal class CommandContoller(IRobotOperator robotOperation, IMapOperator mapOperation) : ICommandController, ICommandOperator
+	public class CommandContoller(IMediator mediator) : ICommandController
 	{
-		private readonly IRobotOperator _robotOperation = robotOperation;
-		private readonly IMapOperator _mapOperation = mapOperation;
+		private readonly IMediator _mediator = mediator;
 
-		private Queue<Command> commandQueue = [];
-
-		public void Create(IEnumerable<string> commands)
+		public async Task<CommandQueueStatusDto> CreateAsync(CommandDataDto data, Guid executionId)
 		{
-			foreach (var command in commands)
+			var command = new CreateCommandQueueCommand
 			{
-				var newCommand = new Command(command.ToCommand(), 1); // TODO: Get battery from configuration
-
-				if (!_robotOperation.ValidateCommand(newCommand, out var error))
-				{
-					throw new ArgumentException($"Command '{command}' is invalid. {error}");
-				}
-
-				commandQueue.Enqueue(newCommand);
-			}
-		}
-
-		public void ExcecuteAll()
-		{
-			while (commandQueue.Count != 0)
-			{
-				ExecuteNext();
-			}
-		}
-
-		public CommandStatusDto ExecuteNext()
-		{
-			var command = commandQueue.Dequeue();
-
-			if (command == null)
-			{
-				throw new InvalidOperationException("No commands to execute");
-			}
-
-			if (!_robotOperation.ValidateCommand(command, out var robotError))
-			{
-				throw new ArgumentException($"Command '{command}' is invalid. {robotError}");
-			}
-
-			if (!_mapOperation.ValidateCommand(command, out var mapError))
-			{
-				throw new ArgumentException($"Command '{command}' is invalid. {mapError}");
-			}
-
-			_robotOperation.ExecuteCommand(command);
-			_mapOperation.Update(command);
-
-			return new CommandStatusDto()
-			{
-				CommandType = command.CommandType,
-				ConsumedEnergy = command.ConsumedEnergy
+				ExecutionId = executionId,
+				Commands = data.Commands,
+				EnergyConsumptions = data.EnergyConsumptions.ToDictionary(x => x.Key.ToCommand(), x => x.Value)
 			};
+
+			return await _mediator.Send(command);
 		}
 
-		public bool ValidateCommand(Command command, out string? error)
+		public Task ExcecuteAllAsync(Guid executionId)
 		{
-			error = null;
+			throw new NotImplementedException();
+		}
 
-			if (command == null)
+		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)
+		{
+			var query = new GetCommandQueueQuery
 			{
-				error = "Command is null";
-				return false;
-			}
+				ExecutionId = executionId
+			};
 
-			if (command.CommandType == (CommandType)0)
-			{
-				error = $"CommandType '{command}' is invalid. Valid values are: TL, TR, A, B, C, TurnLeft, Turn Right, Advance, Back, Clean";
-				return false;
-			}
-
-			if (command.ConsumedEnergy < 0)
-			{
-				error = "ConsumedEnergy is invalid. It must be greater than or equal to 0";
-				return false;
-			}
-
-			return true;
+			return await _mediator.Send(query);
 		}
 	}
 }

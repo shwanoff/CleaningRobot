@@ -25,7 +25,7 @@ namespace CleaningRobot.UseCases.Helpers
 					Facing.West  => new Position(position.X + 1, position.Y),
 					_ => throw new ArgumentException($"Facing '{position.Facing}' is invalid")
 				},
-				_ => throw new ArgumentException($"CommandType '{commandType}' is invalid")
+				_ => throw new ArgumentException($"Type '{commandType}' is invalid")
 			};
 		}
 	}

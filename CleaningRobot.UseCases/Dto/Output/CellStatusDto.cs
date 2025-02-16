@@ -1,8 +1,9 @@
 ﻿using CleaningRobot.Entities.Enums;
+using CleaningRobot.UseCases.Dto.Base;
 
-namespace CleaningRobot.UseCases.Dto
+namespace CleaningRobot.UseCases.Dto.Output
 {
-	public class CellStatusDto
+	public class CellStatusDto : StatusDtoBase
 	{
 		public int X { get; set; }
 		public int Y { get; set; }

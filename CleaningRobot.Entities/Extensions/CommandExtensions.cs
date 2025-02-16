@@ -20,7 +20,7 @@ namespace CleaningRobot.Entities.Extensions
 				"ADVANCE" => CommandType.Advance,
 				"BACK" => CommandType.Back,
 				"CLEAN" => CommandType.Clean,
-				_ => throw new ArgumentException($"CommandType '{command}' is invalid. Valid values are: TL, TR, A, B, C, TurnLeft, Turn Right, Advance, Back, Clean")
+				_ => throw new ArgumentException($"Type '{command}' is invalid. Valid values are: TL, TR, A, B, C, TurnLeft, Turn Right, Advance, Back, Clean")
 			};
 		}
 	}

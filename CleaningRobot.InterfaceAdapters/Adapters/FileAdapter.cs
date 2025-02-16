@@ -4,20 +4,30 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 {
 	public class FileAdapter : IFileAdapter
 	{
-		public bool TryRead(string path, out string content)
+		public async Task<string> ReadAsync(string path)
 		{
 			using var reader = new StreamReader(path);
-			content = reader.ReadToEnd();
+			var content = await reader.ReadToEndAsync();
 
-			return !string.IsNullOrEmpty(content);
+			if (string.IsNullOrEmpty(content))
+			{
+				throw new ArgumentException("File is empty");
+			}
+
+			return content;
 		}
 
-		public bool TryWrite(string path, string content, bool replase = true)
+		public Task WriteAsync(string path, string content, bool replase = true)
 		{
 			using var writer = new StreamWriter(path, !replase);
-			writer.Write(content);
+			writer.WriteAsync(content);
 
-			return Exists(path);
+			if (!Exists(path))
+			{
+				throw new ArgumentException("File was not created");
+			}
+
+			return Task.CompletedTask;
 		}
 
 		public bool ValidateInput(string path, out string? error, bool mustExist = false)

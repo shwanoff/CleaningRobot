@@ -1,10 +1,10 @@
-﻿using CleaningRobot.UseCases.Dto;
+﻿using CleaningRobot.UseCases.Dto.Input;
+using CleaningRobot.UseCases.Dto.Output;
 
 namespace CleaningRobot.UseCases.Interfaces.Controllers
 {
-	public interface IRobotController
+	public interface IRobotController : IController<RobotDataDto, RobotStatusDto>
 	{
-		void Create(int x, int y, string facing, int battery);
-		RobotStatusDto GetCurrentStatus();
+		
 	}
 }

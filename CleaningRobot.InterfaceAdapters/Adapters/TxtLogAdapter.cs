@@ -8,58 +8,41 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly IFileAdapter _fileAdapter = fileAdapter;
 
-		private const string FILE_NAME_FORMAT = "cleanin_robot_log_{0:yyyyMMdd}.log";
+		private const string FILE_NAME_FORMAT = "cleaning_robot_log_{0:yyyyMMdd}.log";
 
 		private TxtLogConnectionStringDto _configuration;
 
-		public void Setup(string connectionString)
+		public async Task SetupAsync(string connectionString)
 		{
-			if (_jsonAdapter.TryDeserialize(connectionString, out TxtLogConnectionStringDto configuration))
-			{
-				if (configuration != null)
-				{
-					_configuration = configuration;
-				}
-				else
-				{
-					throw new ArgumentException("Invalid configuration");
-				}
-			}
-			else
-			{
-				throw new ArgumentException("Invalid configuration");
-			}
+			_configuration = await _jsonAdapter.DeserializeAsync<TxtLogConnectionStringDto>(connectionString);
 		}
 
-		public void Error(string message, Exception? exception = null)
+		public async Task ErrorAsync(string message, Guid executionId, Exception? exception = null)
 		{
-			Write(message, "Error");
+			await Write(message, "ErrorAsync", executionId);
 		}
 
-		public void Info(string message)
+		public async Task InfoAsync(string message, Guid executionId)
 		{
 			if (_configuration.WriteTrace)
 			{
-				Write(message, "Info");
+				await Write(message, "InfoAsync", executionId);
 			}
 		}
 
-		public void Warning(string message)
+		public async Task WarningAsync(string message, Guid executionId)
 		{
-			Write(message, "Warning");
+			await Write(message, "WarningAsync", executionId);
 		}
 
-		private void Write(string message, string type)
+		private async Task Write(string message, string type, Guid executionId)
 		{
 			var fileName = string.Format(FILE_NAME_FORMAT, DateTime.Now);
 			var fullPath = Path.Combine(_configuration.FolderPath, fileName);
 
-			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{type}] {message}";
+			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{executionId}] [{type}] {message}";
 
-			if (!_fileAdapter.TryWrite(fullPath, text, replase: false))
-			{
-				throw new Exception($"Error writing log to file '{fullPath}'");
-			}
+			await _fileAdapter.WriteAsync(fullPath, text, replase: false);
 		}
 	}
 }

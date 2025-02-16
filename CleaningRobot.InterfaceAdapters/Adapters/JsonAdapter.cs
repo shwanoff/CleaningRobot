@@ -5,50 +5,38 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 {
 	public class JsonAdapter : IJsonAdapter
 	{
-		public bool TryDeserialize<T>(string json, out T? result)
+		public async Task<T> DeserializeAsync<T>(string json)
 		{
-			result = default;
-
 			if (string.IsNullOrWhiteSpace(json))
 			{
-				return false;
+				throw new ArgumentNullException(nameof(json), "Json to deserialize cannot be null or empty");
 			}
-			try
-			{
-				var deserializedResult = JsonSerializer.Deserialize<T>(json);
 
-				if (deserializedResult == null)
-				{
-					return false;
-				}
+			var result = await Task.Run(() => JsonSerializer.Deserialize<T>(json));
 
-				result = deserializedResult;
-				return true;
-			}
-			catch (Exception)
+			if (result == null)
 			{
-				return false;
+				throw new ArgumentException("Error deserializing json");
 			}
+
+			return result;
 		}
 
-		public bool TrySerialize<T>(T? item, out string result)
+		public async Task<string> SerializeAsync<T>(T? item)
 		{
-			result = string.Empty;
-
 			if (item == null)
 			{
-				return false;
+				throw new ArgumentNullException(nameof(item), "Item to serialize cannot be null");
 			}
 
-			try
+			var result = await Task.Run(() => JsonSerializer.Serialize(item));
+
+			if (string.IsNullOrWhiteSpace(result))
 			{
-				result = JsonSerializer.Serialize(item);
-				return true;
+				throw new ArgumentException("Error serializing item");
 			}
-			catch (Exception)
-			{
-				return false;
-			}
+
+			return result;
 		}
 	}
 }

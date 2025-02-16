@@ -1,7 +1,8 @@
 ﻿using CleaningRobot.Entities.Enums;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
-using CleaningRobot.UseCases.Dto;
+using CleaningRobot.UseCases.Dto.Input;
+using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces.Controllers;
 
 namespace CleaningRobot.InterfaceAdapters
@@ -22,63 +23,61 @@ namespace CleaningRobot.InterfaceAdapters
 		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly ILogAdapter _logAdapter = logAdapter;
 
-		public ExecutionResultDto Execute(string inputFilePath, string outputFilePath)
+		private readonly Guid _executionId = Guid.NewGuid();
+
+		public async Task<ExecutionResultDto> ExecuteAsync(string inputFilePath, string outputFilePath)
 		{
 			try
 			{
 				ValidateInput(inputFilePath, mustExist: true);
 				ValidateInput(outputFilePath);
 
-				var fileContent = ReadFile(inputFilePath);
-				var inputData = Deserialize(fileContent);
+				var fileContent = await ReadFileAsync(inputFilePath);
+				var inputData = await DeserializeAsync(fileContent);
 
-				CreateMap(inputData);
-				CreateRobot(inputData);
-				CreateCommandsList(inputData);
+				var createMapTask = CreateMapAsync(inputData);
+				var createRobotTask = CreateRobotAsync(inputData);
+				var createCommandsTask = CreateCommandsListAsync(inputData);
 
-				ExecuteCommands(runAll: true);
+				await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
 
-				var cells = GetAllCells();
+				await ExecuteCommandsAsync();
+
+				var cells = await GetAllCells();
 				var visitedCells = GetVisitedCells(cells);
 				var cleanedCells = GetCleanedCells(cells);
 
-				var robot = GetRobotStatus();
+				var robot = await GetRobotStatusAsync();
 
 				var resultDto = CreateOutputData(visitedCells, cleanedCells, robot);
+				var result = await SerializeAsync(resultDto);
 
-				var result = Serialize(resultDto);
-				SaveOutput(outputFilePath, result, replace: true);
+				await SaveOutputAsync(outputFilePath, result, replace: true);
 
-				return new ExecutionResultDto(result);
+				return new ExecutionResultDto(result, _executionId);
 			}
 			catch (Exception ex)
 			{
-				_logAdapter.Error(ex.Message);
-				return new ExecutionResultDto(ex);
+				await _logAdapter.ErrorAsync(ex.Message, _executionId);
+				return new ExecutionResultDto(ex, _executionId);
 			}
 		}
 
 		#region Private methods
-		private void SaveOutput(string outputFilePath, string result, bool replace)
+		private async Task SaveOutputAsync(string outputFilePath, string result, bool replace)
 		{
 			Trace($"Writing output to file '{outputFilePath}'");
 
-			if (!_fileAdapter.TryWrite(outputFilePath, result, replace))
-			{
-				throw new ArgumentException($"Error writing output to file '{outputFilePath}'");
-			}
+			await _fileAdapter.WriteAsync(outputFilePath, result, replace);
 
 			Trace($"Output written to file '{outputFilePath}'");
 		}
 
-		private string Serialize(OutputDataDto outputData)
+		private async Task<string> SerializeAsync(OutputDataDto outputData)
 		{
 			Trace("Serializing output data");
 
-			if (!_jsonAdapter.TrySerialize(outputData, out string result))
-			{
-				throw new ArgumentException("Error serializing output data");
-			}
+			var result = await _jsonAdapter.SerializeAsync(outputData);
 
 			Trace($"Output data serialized: {result}");
 
@@ -102,90 +101,87 @@ namespace CleaningRobot.InterfaceAdapters
 			return outputData;
 		}
 
-		private void CreateCommandsList(InputDataDto inputData)
+		private async Task CreateCommandsListAsync(InputDataDto inputData)
 		{
 			Trace("Creating commands list");
 
-			_commandController.Create(inputData.Commands);
+			//TODO : Add energy consumption for each command type from configuration
+			var energyConsumptions = new Dictionary<string, int>
+			{
+				[CommandType.TurnLeft.ToString()] = 1,
+				[CommandType.TurnRight.ToString()] = 1,
+				[CommandType.Advance.ToString()] = 2,
+				[CommandType.Back.ToString()] = 3,
+				[CommandType.Clean.ToString()] = 5
+			};
+
+			var data = new CommandDataDto
+			{
+				Commands = inputData.Commands,
+				EnergyConsumptions = energyConsumptions
+			};
+
+			await _commandController.CreateAsync(data, _executionId);
 
 			Trace("Commands list created");
 		}
 
-		private void CreateMap(InputDataDto inputData)
+		private async Task CreateMapAsync(InputDataDto inputData)
 		{
 			Trace("Creating map");
 
-			_mapController.Create(inputData.Map);
+			var data = new MapDataDto
+			{
+				Map = inputData.Map
+			};
+
+			await _mapController.CreateAsync(data, _executionId);
 
 			Trace("Map created");
 		}
 
-		private void CreateRobot(InputDataDto inputData)
+		private async Task CreateRobotAsync(InputDataDto inputData)
 		{
 			Trace("Creating robot");
 
-			_robotController.Create(inputData.Start.X, inputData.Start.Y, inputData.Start.Facing, inputData.Battery);
+			var data = new RobotDataDto
+			{
+				X = inputData.Start.X,
+				Y = inputData.Start.Y,
+				Facing = inputData.Start.Facing,
+				Battery = inputData.Battery
+			};
+
+			await _robotController.CreateAsync(data, _executionId);
 
 			Trace("Robot created");
 		}
 
-		private void ExecuteCommands(bool runAll)
-		{
-			if (runAll)
-			{
-				ExecuteAllCommands();
-			}
-			else
-			{
-				ExecuteCommandsOneByOne();
-			}
-		}
-
-		private void ExecuteAllCommands()
+		private async Task ExecuteCommandsAsync()
 		{
 			Trace("Executing all commands");
 
-			_commandController.ExcecuteAll();
+			await _commandController.ExcecuteAllAsync(_executionId);
 
 			Trace("All commands executed");
 		}
 
-		private void ExecuteCommandsOneByOne()
+		private async Task<RobotStatusDto> GetRobotStatusAsync()
 		{
-			CommandStatusDto? command;
-
-			do
-			{
-				command = _commandController.ExecuteNext();
-
-				if (command != null)
-				{
-					Trace($"Executing next command: {command}");
-
-					GetRobotStatus();
-
-					GetAllCells();
-				}
-			}
-			while (command != null);
-		}
-
-		private RobotStatusDto GetRobotStatus()
-		{
-			var robot = _robotController.GetCurrentStatus();
+			var robot = await _robotController.GetAsync(_executionId);
 
 			Trace($"Robot status: {robot}");
 
 			return robot;
 		}
 
-		private IEnumerable<CellStatusDto> GetAllCells()
+		private async Task<IEnumerable<CellStatusDto>> GetAllCells()
 		{
-			var cells = _mapController.GetAllCellStatuses();
+			var cells = await _mapController.GetAsync(_executionId);
 
 			Trace($"All cells: {cells}");
 
-			return cells;
+			return cells.Cells;
 		}
 
 		private IEnumerable<CellStatusDto> GetVisitedCells(IEnumerable<CellStatusDto> cells)
@@ -216,28 +212,23 @@ namespace CleaningRobot.InterfaceAdapters
 			Trace($"Input file path validated successfully: {filePath}");
 		}
 
-		private string ReadFile(string filePath)
+		private async Task<string> ReadFileAsync(string filePath)
 		{
 			Trace($"Reading file '{filePath}'");
 
-			if (!_fileAdapter.TryRead(filePath, out string fileContent))
-			{
-				throw new ArgumentException($"Error reading file '{filePath}'");
-			}
+			var fileContent = await _fileAdapter.ReadAsync(filePath);
 
 			Trace($"File '{filePath}' read successfully. Content: {fileContent}");
 
 			return fileContent;
 		}
 
-		private InputDataDto Deserialize(string fileContent)
+		private async Task<InputDataDto> DeserializeAsync(string fileContent)
 		{
 			Trace("Deserializing input data");
 
-			if (!_jsonAdapter.TryDeserialize(fileContent, out InputDataDto inputData))
-			{
-				throw new ArgumentException("Error deserializing input data");
-			}
+			var inputData = await _jsonAdapter.DeserializeAsync<InputDataDto>(fileContent);
+
 
 			Trace($"Input data {fileContent} deserialized: {inputData}");
 
@@ -246,7 +237,7 @@ namespace CleaningRobot.InterfaceAdapters
 
 		private void Trace(string message)
 		{
-			_logAdapter.Info(message);
+			_logAdapter.InfoAsync($"{message}", _executionId);
 		}
 
 		#endregion

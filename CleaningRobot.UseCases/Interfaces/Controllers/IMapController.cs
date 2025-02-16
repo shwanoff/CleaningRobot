@@ -1,10 +1,10 @@
-﻿using CleaningRobot.UseCases.Dto;
+﻿using CleaningRobot.UseCases.Dto.Input;
+using CleaningRobot.UseCases.Dto.Output;
 
 namespace CleaningRobot.UseCases.Interfaces.Controllers
 {
-	public interface IMapController
+	public interface IMapController : IController<MapDataDto, MapStatusDto>
 	{
-		void Create(string[][] map);
-		IEnumerable<CellStatusDto> GetAllCellStatuses();
+
 	}
 }
