@@ -3,9 +3,9 @@ using CleaningRobot.UseCases.Dto.Base;
 
 namespace CleaningRobot.UseCases.Dto.Output
 {
-    public class ExecutionResultStatusDto<T> : StatusDtoBase where T : EntityBase
+    public class ExecutionResultStatusDto<T> : StatusDto where T : EntityBase
 	{
 		public required T Result { get; set; }
-		public bool IsCompleted { get; set; }
+		
 	}
 }

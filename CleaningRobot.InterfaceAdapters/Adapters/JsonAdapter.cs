@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.InterfaceAdapters.Interfaces;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace CleaningRobot.InterfaceAdapters.Adapters
 {
@@ -12,7 +13,12 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 				throw new ArgumentNullException(nameof(json), "Json to deserialize cannot be null or empty");
 			}
 
-			var result = await Task.Run(() => JsonSerializer.Deserialize<T>(json));
+			var normalizedJson = Normalize(json);
+
+			var result = await Task.Run(() => JsonSerializer.Deserialize<T>(normalizedJson, new JsonSerializerOptions
+			{
+				PropertyNameCaseInsensitive = true
+			}));
 
 			if (result == null)
 			{
@@ -37,6 +43,13 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 			}
 
 			return result;
+		}
+
+		public static string Normalize(string json)
+		{
+			json = Regex.Replace(json, "\"null\"", "null", RegexOptions.IgnoreCase);
+
+			return json;
 		}
 	}
 }

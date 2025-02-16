@@ -35,11 +35,15 @@ namespace CleaningRobot.InterfaceAdapters
 				var fileContent = await ReadFileAsync(inputFilePath);
 				var inputData = await DeserializeAsync(fileContent);
 
-				var createMapTask = CreateMapAsync(inputData);
-				var createRobotTask = CreateRobotAsync(inputData);
-				var createCommandsTask = CreateCommandsListAsync(inputData);
+				//var createMapTask = CreateMapAsync(inputData);
+				//var createRobotTask = CreateRobotAsync(inputData);
+				//var createCommandsTask = CreateCommandsListAsync(inputData);
 
-				await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
+				//await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
+
+				await CreateMapAsync(inputData);
+				await CreateRobotAsync(inputData);
+				await CreateCommandsListAsync(inputData);
 
 				await ExecuteCommandsAsync();
 
@@ -204,7 +208,7 @@ namespace CleaningRobot.InterfaceAdapters
 
 		private void ValidateInput(string filePath, bool mustExist = false)
 		{
-			if (_fileAdapter.ValidateInput(filePath, out string? error, mustExist))
+			if (!_fileAdapter.ValidateInput(filePath, out string? error, mustExist))
 			{
 				throw new ArgumentException(error);
 			}

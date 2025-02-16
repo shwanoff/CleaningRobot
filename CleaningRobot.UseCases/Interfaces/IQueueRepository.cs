@@ -2,10 +2,10 @@
 {
     public interface IQueueRepository<T> : IRepository<Queue<T>> where T : class
 	{
-		Task<T> PeekFirstAsync(Guid executionId);
-		Task<IEnumerable<T>> PeekAllAsync(Guid executionId);
+		Task<T> PeekAsync(Guid executionId);
+		Task<IEnumerable<T>> ReadAllAsync(Guid executionId);
 		Task PushAsync(Guid executionId, T entity);
 		Task UpdateFirstAsync(Guid executionId, T entity);
-		Task<T> PullAsync(Guid executionId);
+		Task<T?> PullAsync(Guid executionId);
 	}
 }

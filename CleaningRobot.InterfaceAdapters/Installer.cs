@@ -1,6 +1,8 @@
 ﻿using CleaningRobot.InterfaceAdapters.Adapters;
+using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -8,17 +10,19 @@ namespace CleaningRobot.InterfaceAdapters
 {
 	public static class Installer
 	{
-		public static IServiceCollection AddInterfaceAdapters(this IServiceCollection services)
+		public static IServiceCollection AddInterfaceAdapters(this IServiceCollection services, IConfiguration configuration)
 		{
 			services.AddUseCases();
 
-			services.AddTransient<IFileAdapter, FileAdapter>();
-			services.AddTransient<IJsonAdapter, JsonAdapter>();
-			services.AddTransient<ILogAdapter, TxtLogAdapter>();
+			services.AddScoped<IFileAdapter, FileAdapter>();
+			services.AddScoped<IJsonAdapter, JsonAdapter>();
+			services.AddScoped<ILogAdapter, TxtLogAdapter>();
 
-			services.AddTransient<IRobotOrchestrator, RobotOrchestrator>();
+			services.AddScoped<IRobotOrchestrator, RobotOrchestrator>();
 
-			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly())); 
+			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+			services.AddSingleton(configuration.GetSection("Logging").Get<TxtLogConfigurationDto>());
 
 			return services;
 		}

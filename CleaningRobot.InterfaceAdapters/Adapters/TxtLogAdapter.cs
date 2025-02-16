@@ -3,44 +3,54 @@ using CleaningRobot.InterfaceAdapters.Interfaces;
 
 namespace CleaningRobot.InterfaceAdapters.Adapters
 {
-	public class TxtLogAdapter(IJsonAdapter jsonAdapter, IFileAdapter fileAdapter) : ILogAdapter
+	public class TxtLogAdapter(IFileAdapter fileAdapter, TxtLogConfigurationDto configuration) : ILogAdapter
 	{
-		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly IFileAdapter _fileAdapter = fileAdapter;
-
-		private const string FILE_NAME_FORMAT = "cleaning_robot_log_{0:yyyyMMdd}.log";
-
-		private TxtLogConnectionStringDto _configuration;
-
-		public async Task SetupAsync(string connectionString)
-		{
-			_configuration = await _jsonAdapter.DeserializeAsync<TxtLogConnectionStringDto>(connectionString);
-		}
+		private readonly TxtLogConfigurationDto _configuration = configuration;
 
 		public async Task ErrorAsync(string message, Guid executionId, Exception? exception = null)
 		{
-			await Write(message, "ErrorAsync", executionId);
+			if (_configuration.LogLevel.Error)
+			{
+				await Write(message, "Error", executionId);
+			}
 		}
 
 		public async Task InfoAsync(string message, Guid executionId)
 		{
-			if (_configuration.WriteTrace)
+			if (_configuration.LogLevel.Info)
 			{
-				await Write(message, "InfoAsync", executionId);
+				await Write(message, "Info", executionId);
 			}
 		}
 
 		public async Task WarningAsync(string message, Guid executionId)
 		{
-			await Write(message, "WarningAsync", executionId);
+			if (_configuration.LogLevel.Warning)
+			{
+				await Write(message, "Warning", executionId);
+			}
 		}
 
-		private async Task Write(string message, string type, Guid executionId)
+		private async Task Write(string message, string type, Guid executionId, Exception? ex = null)
 		{
-			var fileName = string.Format(FILE_NAME_FORMAT, DateTime.Now);
-			var fullPath = Path.Combine(_configuration.FolderPath, fileName);
+			string dirctory;
 
-			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{executionId}] [{type}] {message}";
+			if (Path.IsPathRooted(_configuration.TextLog.Path))
+			{
+				dirctory = _configuration.TextLog.Path;
+			}
+			else
+			{
+				var currentDirectory = Directory.GetCurrentDirectory();
+				dirctory = Path.Combine(currentDirectory, _configuration.TextLog.Path);
+			}
+
+			var fileName = string.Format(_configuration.TextLog.FileNameFormat, DateTime.Now);
+
+			var fullPath = Path.Combine(dirctory, fileName);
+
+			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}];[{executionId}];[{type}];{message};{ex?.Message};{ex?.Source};{ex?.StackTrace}";
 
 			await _fileAdapter.WriteAsync(fullPath, text, replase: false);
 		}

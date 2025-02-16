@@ -9,25 +9,18 @@ namespace CleaningRobot
 	{
 		public static ServiceProvider ConfigureServices()
 		{
-			var services = new ServiceCollection()
-				.LoadConfiguration()
-				.AddInterfaceAdapters();
-
-			var serviceProvider = services.BuildServiceProvider();
-
-			return serviceProvider;
-		}
-
-		private static IServiceCollection LoadConfiguration(this IServiceCollection services)
-		{
 			var configuration = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.Build();
 
-			services.AddSingleton<IConfiguration>(configuration);
+			var services = new ServiceCollection()
+				.AddSingleton<IConfiguration>(configuration)
+				.AddInterfaceAdapters(configuration);
 
-			return services;
+			var serviceProvider = services.BuildServiceProvider();
+
+			return serviceProvider;
 		}
 	}
 }

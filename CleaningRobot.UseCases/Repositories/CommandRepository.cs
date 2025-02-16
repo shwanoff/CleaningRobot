@@ -43,7 +43,7 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(value);
 		}
 
-		public Task<IEnumerable<Command>> PeekAllAsync(Guid executionId)
+		public Task<IEnumerable<Command>> ReadAllAsync(Guid executionId)
 		{
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
@@ -53,7 +53,7 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult<IEnumerable<Command>>(value);
 		}
 
-		public Task<Command> PeekFirstAsync(Guid executionId)
+		public Task<Command> PeekAsync(Guid executionId)
 		{
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
@@ -63,14 +63,19 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(value.Peek());
 		}
 
-		public Task<Command> PullAsync(Guid executionId)
+		public Task<Command?> PullAsync(Guid executionId)
 		{
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
 				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
 			}
 
-			return Task.FromResult(value.Dequeue());
+			if (value.Count == 0)
+			{
+				return Task.FromResult<Command?>(null);
+			}
+
+			return Task.FromResult<Command?>(value.Dequeue());
 		}
 
 		public Task PushAsync(Guid executionId, Command entity)

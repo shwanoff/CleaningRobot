@@ -5,6 +5,6 @@
 		public required string[][] Map { get; set; }
 		public required RobotPositionDto Start { get; set; }
 		public required List<string> Commands { get; set; }
-		public int Battery { get; set; }
+		public required int Battery { get; set; }
 	}
 }

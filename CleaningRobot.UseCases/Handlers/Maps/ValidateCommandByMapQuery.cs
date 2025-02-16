@@ -24,7 +24,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = "Request cannot be null"
 				};
 			}
@@ -33,7 +33,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = "Command cannot be null",
 					ExecutionId = request.ExecutionId
 				};
@@ -43,7 +43,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = "The energy consumption of a command cannot be negative",
 					ExecutionId = request.ExecutionId
 				};
@@ -54,7 +54,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = $"Map for execution ID {request.ExecutionId} not found.",
 					ExecutionId = request.ExecutionId
 				};
@@ -65,7 +65,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = $"Robot for execution ID {request.ExecutionId} not found.",
 					ExecutionId = request.ExecutionId
 				};
@@ -75,7 +75,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				return new ValidationResultStatusDto
 				{
-					IsValid = false,
+					IsCompleted = false,
 					Error = error,
 					ExecutionId = request.ExecutionId
 				};
@@ -85,7 +85,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			return new ValidationResultStatusDto
 			{
-				IsValid = true,
+				IsCompleted = true,
 				ExecutionId = request.ExecutionId
 			};
 		}

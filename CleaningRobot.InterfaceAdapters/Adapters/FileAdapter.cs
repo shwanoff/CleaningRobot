@@ -17,17 +17,21 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 			return content;
 		}
 
-		public Task WriteAsync(string path, string content, bool replase = true)
+		public async Task WriteAsync(string path, string content, bool replase = true)
 		{
+			var directory = Path.GetDirectoryName(path);
+			if (!Directory.Exists(directory))
+			{
+				Directory.CreateDirectory(directory);
+			}
+
 			using var writer = new StreamWriter(path, !replase);
-			writer.WriteAsync(content);
+			await writer.WriteAsync(content);
 
 			if (!Exists(path))
 			{
 				throw new ArgumentException("File was not created");
 			}
-
-			return Task.CompletedTask;
 		}
 
 		public bool ValidateInput(string path, out string? error, bool mustExist = false)
@@ -64,5 +68,7 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 		{
 			return Path.IsPathRooted(path);
 		}
+
+
 	}
 }

@@ -1,4 +1,5 @@
-﻿using CleaningRobot.Entities.Extensions;
+﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Handlers.Commands;
@@ -23,9 +24,20 @@ namespace CleaningRobot.UseCases.Controllers
 			return await _mediator.Send(command);
 		}
 
-		public Task ExcecuteAllAsync(Guid executionId)
+		public async Task ExcecuteAllAsync(Guid executionId)
 		{
-			throw new NotImplementedException();
+			ExecutionResultStatusDto<Command> result;
+
+			do
+			{
+				var command = new ExecuteNextCommandFromQueueCommand
+				{
+					ExecutionId = executionId
+				};
+
+				result = await _mediator.Send(command);
+			}
+			while (result != null);
 		}
 
 		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)

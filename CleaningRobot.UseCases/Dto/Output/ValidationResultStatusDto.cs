@@ -2,9 +2,8 @@
 
 namespace CleaningRobot.UseCases.Dto.Output
 {
-    public class ValidationResultStatusDto : StatusDtoBase
+    public class ValidationResultStatusDto : StatusDto
 	{
-        public bool IsValid { get; set; }
-		public string? Error { get; set; }
+        
 	}
 }
