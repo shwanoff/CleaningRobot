@@ -50,7 +50,12 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 
 			var fullPath = Path.Combine(dirctory, fileName);
 
-			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}];[{executionId}];[{type}];{message};{ex?.Message};{ex?.Source};{ex?.StackTrace}";
+			message = new string(message.Where(c => !char.IsControl(c)).ToArray());
+			var exceptionMessage = ex?.Message != null ? new string(ex.Message.Where(c => !char.IsControl(c)).ToArray()) : null;
+			var exceptionSource = ex?.Source != null ? new string(ex.Source.Where(c => !char.IsControl(c)).ToArray()) : null;
+			var exceptionStackTrace = ex?.StackTrace != null ? new string(ex.StackTrace.Where(c => !char.IsControl(c)).ToArray()) : null;
+
+			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}];[{type}];[{executionId}];{message};{exceptionMessage};{exceptionSource};{exceptionStackTrace}{Environment.NewLine}";
 
 			await _fileAdapter.WriteAsync(fullPath, text, replase: false);
 		}

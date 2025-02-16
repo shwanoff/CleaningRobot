@@ -37,12 +37,12 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			return new CommandQueueStatusDto
 			{
 				ExecutionId = request.ExecutionId,
-				Commands = (Queue<CommandStatusDto>)commandQueue.Select(x => new CommandStatusDto
+				Commands = new Queue<CommandStatusDto>(commandQueue.Select(x => new CommandStatusDto
 				{
 					Type = x.Type,
 					EnergyConsumption = x.EnergyConsumption,
 					IsCompleted = x.IsCompleted
-				})
+				}).ToList())
 			};
 		}
 

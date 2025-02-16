@@ -18,6 +18,11 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		public async Task<MapStatusDto> Handle(CreateMapCommand request, CancellationToken cancellationToken = default)
 		{
+			if (request == null)
+			{
+				throw new ArgumentNullException(nameof(request), "Request cannot be null");
+			}
+
 			if (request.MapData == null)
 			{
 				throw new ArgumentNullException(nameof(request.MapData), "Map data cannot be null");

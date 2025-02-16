@@ -4,7 +4,6 @@ using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace CleaningRobot.InterfaceAdapters
 {
@@ -12,15 +11,11 @@ namespace CleaningRobot.InterfaceAdapters
 	{
 		public static IServiceCollection AddInterfaceAdapters(this IServiceCollection services, IConfiguration configuration)
 		{
-			services.AddUseCases();
-
 			services.AddScoped<IFileAdapter, FileAdapter>();
 			services.AddScoped<IJsonAdapter, JsonAdapter>();
 			services.AddScoped<ILogAdapter, TxtLogAdapter>();
 
 			services.AddScoped<IRobotOrchestrator, RobotOrchestrator>();
-
-			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 			services.AddSingleton(configuration.GetSection("Logging").Get<TxtLogConfigurationDto>());
 

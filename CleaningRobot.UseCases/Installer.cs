@@ -13,7 +13,11 @@ namespace CleaningRobot.UseCases
 		{
 			services.AddSingleton<IRepository<Robot>, RobotRepository>();
 			services.AddSingleton<IRepository<Map>, MapRepository>();
-			services.AddSingleton<IQueueRepository<Command>, CommandRepository>();
+			services.AddSingleton<CommandRepository>();
+
+			services.AddSingleton<IRepository<Queue<Command>>>(provider => provider.GetService<CommandRepository>());
+			services.AddSingleton<IQueueRepository<Command>>(provider => provider.GetService<CommandRepository>());
+
 
 			services.AddScoped<IRobotController, RobotController>();
 			services.AddScoped<IMapController, MapController>();

@@ -3,9 +3,9 @@ using CleaningRobot.UseCases.Interfaces;
 
 namespace CleaningRobot.UseCases.Repositories
 {
-	public class CommandRepository : IQueueRepository<Command>
+	public class CommandRepository : IQueueRepository<Command>, IRepository<Queue<Command>>
 	{
-		private readonly Dictionary<Guid, Queue<Command>> _commands = [];
+		private readonly Dictionary<Guid, Queue<Command>> _commands = new();
 		public Task AddAsync(Guid executionId, Queue<Command> entity)
 		{
 			if (_commands.ContainsKey(executionId))

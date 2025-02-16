@@ -24,7 +24,7 @@ namespace CleaningRobot.UseCases.Controllers
 			return await _mediator.Send(command);
 		}
 
-		public async Task ExcecuteAllAsync(Guid executionId)
+		public async Task<string?> ExcecuteAllAsync(Guid executionId)
 		{
 			ExecutionResultStatusDto<Command> result;
 
@@ -36,8 +36,15 @@ namespace CleaningRobot.UseCases.Controllers
 				};
 
 				result = await _mediator.Send(command);
+
+				if (result?.Error != null)
+				{
+					return result.Error;
+				}
 			}
 			while (result != null);
+
+			return null;
 		}
 
 		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)

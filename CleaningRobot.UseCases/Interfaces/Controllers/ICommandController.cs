@@ -6,6 +6,6 @@ namespace CleaningRobot.UseCases.Interfaces.Controllers
 {
 	public interface ICommandController : IController<CommandDataDto, CommandQueueStatusDto>
 	{
-		Task ExcecuteAllAsync(Guid executionId);
+		Task<string?> ExcecuteAllAsync(Guid executionId);
 	}
 }

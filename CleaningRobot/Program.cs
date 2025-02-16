@@ -10,7 +10,7 @@ if (args.Length != 2)
 string inputFilePath = args[0];
 string outputFilePath = args[1];
 
-var serviceProvider = Build.ConfigureServices();
+var serviceProvider = Startup.ConfigureServices();
 var orchestrator = serviceProvider.GetService<IRobotOrchestrator>();
 
 if (orchestrator == null)

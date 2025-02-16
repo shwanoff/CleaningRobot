@@ -97,7 +97,7 @@ namespace CleaningRobot.InterfaceAdapters
 				Visited = [.. visitedCells.Select(c => new PositionDto { X = c.X, Y = c.Y })],
 				Cleaned = [.. cleanedCells.Select(c => new PositionDto { X = c.X, Y = c.Y })],
 				Final = new RobotPositionDto { X = robot.X, Y = robot.Y, Facing = robot.Facing.ToString() },
-				Battery = robot.Battery
+				Battery = robot.Battery,
 			};
 
 			Trace($"Output data created: {outputData}");
@@ -122,7 +122,8 @@ namespace CleaningRobot.InterfaceAdapters
 			var data = new CommandDataDto
 			{
 				Commands = inputData.Commands,
-				EnergyConsumptions = energyConsumptions
+				EnergyConsumptions = energyConsumptions,
+				ExecutionId = _executionId
 			};
 
 			await _commandController.CreateAsync(data, _executionId);
@@ -136,7 +137,8 @@ namespace CleaningRobot.InterfaceAdapters
 
 			var data = new MapDataDto
 			{
-				Map = inputData.Map
+				Map = inputData.Map,
+				ExecutionId = _executionId
 			};
 
 			await _mapController.CreateAsync(data, _executionId);
@@ -153,7 +155,8 @@ namespace CleaningRobot.InterfaceAdapters
 				X = inputData.Start.X,
 				Y = inputData.Start.Y,
 				Facing = inputData.Start.Facing,
-				Battery = inputData.Battery
+				Battery = inputData.Battery,
+				ExecutionId = _executionId
 			};
 
 			await _robotController.CreateAsync(data, _executionId);
