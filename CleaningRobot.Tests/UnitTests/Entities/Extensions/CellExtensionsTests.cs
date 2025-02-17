@@ -3,6 +3,7 @@ using CleaningRobot.Entities.Extensions;
 
 namespace CleaningRobot.Tests.UnitTests.Entities.Extensions
 {
+	[TestFixture]
 	public class CellExtensionsTests
 	{
 		[TestCase("S", CellType.CleanableSpace)]

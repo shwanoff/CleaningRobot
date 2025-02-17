@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CleaningRobot.Entities\CleaningRobot.Entities.csproj" />
+    <ProjectReference Include="..\CleaningRobot.InterfaceAdapters\CleaningRobot.InterfaceAdapters.csproj" />
+    <ProjectReference Include="..\CleaningRobot.UseCases\CleaningRobot.UseCases.csproj" />
+    <ProjectReference Include="..\CleaningRobot\CleaningRobot.csproj" />
   </ItemGroup>
 
   <ItemGroup>

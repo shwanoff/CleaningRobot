@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 
@@ -50,26 +51,9 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		private static Task<Map> CreateMapAsync(CreateMapCommand request)
 		{
-			var cells = ConvertToRectangularArray(request.MapData);
+			var cells = MapHelper.ConvertToRectangularArray(request.MapData);
 			var map = new Map(cells);
 			return Task.FromResult(map);
-		}
-
-		private static Cell[,] ConvertToRectangularArray(string[][] jaggedArray)
-		{
-			int rows = jaggedArray.Length;
-			int cols = jaggedArray.Max(row => row.Length);
-			Cell[,] rectangularArray = new Cell[rows, cols];
-
-			for (int y = 0; y < rows; y++)
-			{
-				for (int x = 0; x < jaggedArray[y].Length; x++)
-				{
-					rectangularArray[y, x] = new Cell(y, x, jaggedArray[y][x].ToCellType());
-				}
-			}
-
-			return rectangularArray;
 		}
 	}
 }
