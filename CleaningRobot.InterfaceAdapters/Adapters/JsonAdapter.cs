@@ -1,11 +1,24 @@
 ﻿using CleaningRobot.InterfaceAdapters.Interfaces;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace CleaningRobot.InterfaceAdapters.Adapters
 {
 	public class JsonAdapter : IJsonAdapter
 	{
+		private readonly JsonSerializerOptions _deserializeOptions = new()
+		{
+			PropertyNameCaseInsensitive = true
+		};
+
+		private readonly JsonSerializerOptions _serializeOptions = new()
+		{
+			PropertyNamingPolicy = null,
+			WriteIndented = true,
+			Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+		};
+
 		public async Task<T> DeserializeAsync<T>(string json)
 		{
 			if (string.IsNullOrWhiteSpace(json))
@@ -15,10 +28,7 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 
 			var normalizedJson = Normalize(json);
 
-			var result = await Task.Run(() => JsonSerializer.Deserialize<T>(normalizedJson, new JsonSerializerOptions
-			{
-				PropertyNameCaseInsensitive = true
-			}));
+			var result = await Task.Run(() => JsonSerializer.Deserialize<T>(normalizedJson, _deserializeOptions));
 
 			if (result == null)
 			{
@@ -35,7 +45,7 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 				throw new ArgumentNullException(nameof(item), "Item to serialize cannot be null");
 			}
 
-			var result = await Task.Run(() => JsonSerializer.Serialize(item));
+			var result = await Task.Run(() => JsonSerializer.Serialize(item, _serializeOptions));
 
 			if (string.IsNullOrWhiteSpace(result))
 			{

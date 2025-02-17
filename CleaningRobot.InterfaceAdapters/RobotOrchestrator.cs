@@ -94,8 +94,8 @@ namespace CleaningRobot.InterfaceAdapters
 
 			var outputData = new OutputDataDto
 			{
-				Visited = [.. visitedCells.Select(c => new PositionDto { X = c.X, Y = c.Y })],
-				Cleaned = [.. cleanedCells.Select(c => new PositionDto { X = c.X, Y = c.Y })],
+				Visited = visitedCells.Select(c => new PositionDto { X = c.X, Y = c.Y }).ToList(),
+				Cleaned = cleanedCells.Select(c => new PositionDto { X = c.X, Y = c.Y }).ToList(),
 				Final = new RobotPositionDto { X = robot.X, Y = robot.Y, Facing = robot.Facing.ToString() },
 				Battery = robot.Battery,
 			};
