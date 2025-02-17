@@ -91,6 +91,10 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					ExecutionId = request.ExecutionId
 				};
 			}
+			else
+			{
+				//TODO run back off strategy
+			}
 
 			var newValues = new Dictionary<string, object>
 			{
@@ -149,7 +153,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				return false;
 			}
 
-			var nextCell = map.Cells[nextPositon.X, nextPositon.Y];
+			var nextCell = map.Cells[nextPositon.Y, nextPositon.X];
+
 
 			if (nextCell.Type == CellType.Wall)
 			{

@@ -3,7 +3,6 @@ using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
-using CleaningRobot.UseCases.Repositories;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
 {
@@ -119,13 +118,17 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 		private static void Clean(Map map, Robot robot)
 		{
 			var position = robot.Position;
-			map.Cells[position.X, position.Y].State = CellState.Cleaned;
+			map.Cells[position.Y, position.X].State = CellState.Cleaned;
 		}
 
 		private static void Move(Map map, Robot robot)
 		{
 			var position = robot.Position;
-			map.Cells[position.X, position.Y].State = CellState.Visited;
+			var cell = map.Cells[position.Y, position.X];
+			if (cell.State == CellState.NotVisited)
+			{
+				cell.State = CellState.Visited;
+			}
 		}
 	}
 }

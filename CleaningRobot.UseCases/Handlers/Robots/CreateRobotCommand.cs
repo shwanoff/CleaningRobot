@@ -20,15 +20,20 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		{
 			var robot = new Robot(request.Position, request.Battery);
 
-			await _robotRepository.AddAsync(robot, request.ExecutionId);
+			var result = await _robotRepository.AddAsync(robot, request.ExecutionId);
+
+			if (result == null)
+			{
+				throw new Exception("Could not create the robot");
+			}
 
 			return new RobotStatusDto
 			{
 				ExecutionId = request.ExecutionId,
-				X = robot.Position.X,
-				Y = robot.Position.Y,
-				Facing = robot.Position.Facing,
-				Battery = robot.Battery,
+				X = result.Position.X,
+				Y = result.Position.Y,
+				Facing = result.Position.Facing,
+				Battery = result.Battery,
 				IsCorrect = true
 			};
 		}

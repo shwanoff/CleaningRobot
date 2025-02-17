@@ -126,9 +126,9 @@ namespace CleaningRobot.InterfaceAdapters
 				ExecutionId = _executionId
 			};
 
-			await _commandController.CreateAsync(data, _executionId);
+			var result = await _commandController.CreateAsync(data, _executionId);
 
-			Trace("Commands list created");
+			Trace($"Commands list created {result}");
 		}
 
 		private async Task CreateMapAsync(InputDataDto inputData)
@@ -141,9 +141,9 @@ namespace CleaningRobot.InterfaceAdapters
 				ExecutionId = _executionId
 			};
 
-			await _mapController.CreateAsync(data, _executionId);
+			var result = await _mapController.CreateAsync(data, _executionId);
 
-			Trace("Map created");
+			Trace($"Map created {result}");
 		}
 
 		private async Task CreateRobotAsync(InputDataDto inputData)
@@ -159,18 +159,18 @@ namespace CleaningRobot.InterfaceAdapters
 				ExecutionId = _executionId
 			};
 
-			await _robotController.CreateAsync(data, _executionId);
+			var result = await _robotController.CreateAsync(data, _executionId);
 
-			Trace("Robot created");
+			Trace($"Robot created {result}");
 		}
 
 		private async Task ExecuteCommandsAsync()
 		{
 			Trace("Executing all commands");
 
-			await _commandController.ExcecuteAllAsync(_executionId);
+			var result = await _commandController.ExcecuteAllAsync(_executionId);
 
-			Trace("All commands executed");
+			Trace($"All commands executed {result}");
 		}
 
 		private async Task<RobotStatusDto> GetRobotStatusAsync()
@@ -193,7 +193,7 @@ namespace CleaningRobot.InterfaceAdapters
 
 		private IEnumerable<CellStatusDto> GetVisitedCells(IEnumerable<CellStatusDto> cells)
 		{
-			var visitedCells = cells.Where(c => c.State == CellState.Visited);
+			var visitedCells = cells.Where(c => c.State == CellState.Visited || c.State == CellState.Cleaned);
 
 			Trace($"Visited cells: {visitedCells}");
 
