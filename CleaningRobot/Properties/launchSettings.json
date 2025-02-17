@@ -2,7 +2,7 @@
   "profiles": {
     "CleaningRobot": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\admsh\\source\\repos\\CleaningRobot\\CleaningRobot.Tests\\TestData\\Inputs\\test1.json C:\\Users\\admsh\\source\\repos\\CleaningRobot\\CleaningRobot.Tests\\TestData\\ActualResults\\test1_result.json"
+      "commandLineArgs": "C:\\Users\\admsh\\source\\repos\\CleaningRobot\\CleaningRobot.Tests\\TestData\\Inputs\\test1.json C:\\Users\\admsh\\source\\repos\\CleaningRobot\\CleaningRobot.Tests\\TestData\\ActualResults\\test1_Actualresult.json"
     }
   }
 }

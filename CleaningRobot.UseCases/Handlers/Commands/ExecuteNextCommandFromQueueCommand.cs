@@ -5,21 +5,20 @@ using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Handlers.Robots;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
-using System.Threading;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
 {
-	public class ExecuteNextCommandFromQueueCommand : IRequest<ExecutionResultStatusDto<Command>>
+	public class ExecuteNextCommandFromQueueCommand : IRequest<ResultStatusDto>
 	{
 		public Guid ExecutionId { get; set; }
 	}
 
-	public class ExecuteNextCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator) : IRequestHandler<ExecuteNextCommandFromQueueCommand, ExecutionResultStatusDto<Command>>
+	public class ExecuteNextCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator) : IRequestHandler<ExecuteNextCommandFromQueueCommand, ResultStatusDto>
 	{
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
 		private readonly IMediator _mediator = mediator;
 
-		public async Task<ExecutionResultStatusDto<Command>?> Handle(ExecuteNextCommandFromQueueCommand request, CancellationToken cancellationToken)
+		public async Task<ResultStatusDto> Handle(ExecuteNextCommandFromQueueCommand request, CancellationToken cancellationToken)
 		{
 			if (request == null)
 			{
@@ -30,114 +29,84 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			var command = await _commandRepository.PeekAsync(request.ExecutionId);
 
-			if (command != null)
+			if (command == null)
 			{
-				var validationResult = await ValidateCommand(command, request.ExecutionId);
-
-				if (!validationResult.IsCompleted)
+				return new ResultStatusDto
 				{
-					return new ExecutionResultStatusDto<Command>
-					{
-						Result = command,
-						ExecutionId = request.ExecutionId,
-						IsCompleted = false,
-						Error = validationResult.Error
-					};
-				}
-
-				var executionResult = await ExecuteCommand<StatusDto>(command, request.ExecutionId);
-
-				if (!executionResult.IsCompleted)
-				{
-					return new ExecutionResultStatusDto<Command>
-					{
-						Result = command,
-						ExecutionId = request.ExecutionId,
-						IsCompleted = false,
-						Error = executionResult.Error
-					};
-				}
-
-				var result = await _commandRepository.PullAsync(request.ExecutionId);
-
-				if (result == null)
-				{
-					throw new InvalidOperationException("Command was not removed from the queue");
-				}
-
-				return new ExecutionResultStatusDto<Command>
-				{
-					Result = command,
 					ExecutionId = request.ExecutionId,
-					IsCompleted = true
+					IsCorrect = false,
+					Error = "Queue is empty"
 				};
 			}
-			else
-			{
-				return null;
-			}
-		}
 
-		private async Task<StatusDto> ExecuteCommand<T>(Command command, Guid executionId)
-		{
-			var commandExecution = ExecuteByCommand(command, executionId);
-			var mapExecution = ExecuteByMap(command, executionId);
-			var robotExecution = ExecuteByRobot(command, executionId);
+			var validationResult = await ValidateCommand(command, request.ExecutionId);
 
-			await Task.WhenAll(commandExecution, mapExecution, robotExecution);
-
-			if (!commandExecution.Result.IsCompleted)
+			if (!validationResult.IsCorrect || !validationResult.IsValid)
 			{
-				return commandExecution.Result;
-			}
-			else if (!mapExecution.Result.IsCompleted)
-			{
-				return mapExecution.Result;
-			}
-			else if (!robotExecution.Result.IsCompleted)
-			{
-				return robotExecution.Result;
-			}
-			else
-			{
-				return new StatusDto
+				return new ResultStatusDto
 				{
-					ExecutionId = executionId,
-					IsCompleted = true
+					ExecutionId = request.ExecutionId,
+					IsCorrect = false,
+					Error = validationResult.Error
 				};
 			}
-		}
 
-		private async Task<ExecutionResultStatusDto<Command>> ExecuteByCommand(Command command, Guid executionId)
-		{
-			var executeByCommand = new ExecuteCommandCommand
+			var executionResult = await ExecuteCommand<ResultStatusDto>(command, request.ExecutionId);
+
+			if (!executionResult.IsCorrect)
 			{
-				ExecutionId = executionId,
-				Command = command
-			};
+				return new ResultStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = false,
+					Error = executionResult.Error
+				};
+			}
 
-			return await _mediator.Send(executeByCommand);
-		}
+			var result = await _commandRepository.PullAsync(request.ExecutionId);
 
-		private async Task<ExecutionResultStatusDto<Map>> ExecuteByMap(Command command, Guid executionId)
-		{
-			var executeByMap = new ExecuteMapCommand
+			if (result == null)
 			{
-				ExecutionId = executionId,
-				Command = command
-			};
-			return await _mediator.Send(executeByMap);
-		}
+				throw new InvalidOperationException("Command was not removed from the queue");
+			}
 
-		private async Task<ExecutionResultStatusDto<Robot>> ExecuteByRobot(Command command, Guid executionId)
-		{
-			var executeByRobot = new ExecuteRobotCommand
+			if (!result.IsValid)
 			{
-				ExecutionId = executionId,
-				Command = command
-			};
+				return new ResultStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = false,
+					Error = "Validation of the command failed at the end of operation"
+				};
+			}
 
-			return await _mediator.Send(executeByRobot);
+			if (!result.IsCompleted)
+			{
+				return new ResultStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = false,
+					Error = "Execution of the command failed at the end of operation"
+				};
+			}
+
+			return new ExecutionResultStatusDto<CommandStatusDto>
+			{
+				Result = new CommandStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = true,
+					IsCompleted = result.IsCompleted,
+					IsValid = result.IsValid,
+					Type = result.Type,
+					EnergyConsumption = result.EnergyConsumption
+				},
+				ExecutionId = request.ExecutionId,
+				IsCorrect = true,
+				IsCompleted = true,
+					
+			};
+			
 		}
 
 		private async Task<ValidationResultStatusDto> ValidateCommand(Command command, Guid executionId)
@@ -148,15 +117,15 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			await Task.WhenAll(commandValidation, mapValidation, robotValidation);
 
-			if (!commandValidation.Result.IsCompleted)
+			if (!commandValidation.Result.IsValid)
 			{
 				return commandValidation.Result;
 			}
-			else if (!mapValidation.Result.IsCompleted)
+			else if (!mapValidation.Result.IsValid)
 			{
 				return mapValidation.Result;
 			}
-			else if (!robotValidation.Result.IsCompleted)
+			else if (!robotValidation.Result.IsValid)
 			{
 				return robotValidation.Result;
 			}
@@ -164,10 +133,76 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = true,
+					IsCorrect = true,
+					IsValid = true,
 					ExecutionId = executionId
 				};
 			}
+		}
+
+		private async Task<ResultStatusDto> ExecuteCommand<T>(Command command, Guid executionId)
+		{
+			var robotExecution = await ExecuteByRobot(command, executionId);
+
+			if (!robotExecution.IsCorrect || !robotExecution.IsCompleted)
+			{
+				return robotExecution;
+			}
+
+			var mapExecution = await ExecuteByMap(command, executionId);
+
+			if (!mapExecution.IsCorrect || !mapExecution.IsCompleted)
+			{
+				return mapExecution;
+			}
+
+			var commandExecution = await ExecuteByCommand(command, executionId);
+
+			if (!commandExecution.IsCorrect || !commandExecution.IsCompleted)
+			{
+				return commandExecution;
+			}
+
+			else
+			{
+				return new ResultStatusDto
+				{
+					ExecutionId = executionId,
+					IsCorrect = true,
+				};
+			}
+		}
+
+		private async Task<ExecutionResultStatusDto<CommandStatusDto>> ExecuteByCommand(Command command, Guid executionId)
+		{
+			var executeByCommand = new ExecuteCommandCommand
+			{
+				ExecutionId = executionId,
+				Command = command
+			};
+
+			return await _mediator.Send(executeByCommand);
+		}
+
+		private async Task<ExecutionResultStatusDto<MapStatusDto>> ExecuteByMap(Command command, Guid executionId)
+		{
+			var executeByMap = new ExecuteMapCommand
+			{
+				ExecutionId = executionId,
+				Command = command
+			};
+			return await _mediator.Send(executeByMap);
+		}
+
+		private async Task<ExecutionResultStatusDto<RobotStatusDto>> ExecuteByRobot(Command command, Guid executionId)
+		{
+			var executeByRobot = new ExecuteRobotCommand
+			{
+				ExecutionId = executionId,
+				Command = command
+			};
+
+			return await _mediator.Send(executeByRobot);
 		}
 
 		private async Task<ValidationResultStatusDto> ValidateByCommand(Command command, Guid executionId)

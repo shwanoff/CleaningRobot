@@ -5,9 +5,17 @@ namespace CleaningRobot.UseCases.Dto.Output
 {
 	public class CellStatusDto : StatusDtoBase
 	{
-		public int X { get; set; }
-		public int Y { get; set; }
-		public CellType Type { get; set; }
-		public CellState State { get; set; }
+		public required int X { get; set; }
+		public required int Y { get; set; }
+		public required CellType Type { get; set; }
+		public required CellState State { get; set; }
+
+		#if DEBUG
+		public override string ToString()
+		{
+			var success = IsCorrect ? "Success" : "Failed";
+			return $"[{success}] ({X}, {Y}) {Type} {State}";
+		}
+		#endif
 	}
 }

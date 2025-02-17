@@ -1,6 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
-using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
@@ -10,7 +9,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
     public class CreateCommandQueueCommand : IRequest<CommandQueueStatusDto>
     {
 		public required Guid ExecutionId { get; set; }
-		public required IEnumerable<string> Commands { get; set; }
+		public required IEnumerable<CommandType> Commands { get; set; }
 		public required IDictionary<CommandType, int> EnergyConsumptions { get; set; }
 	}
 
@@ -32,17 +31,26 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			var commandQueue = await CreateCommandQueueAsync(request);
 
-			await _commandRepository.AddAsync(request.ExecutionId, commandQueue);
+			var result = await _commandRepository.AddAsync(commandQueue, request.ExecutionId);
+
+			if (result == null)
+			{
+				throw new InvalidOperationException("Command queue could not be created");
+			}
 
 			return new CommandQueueStatusDto
 			{
 				ExecutionId = request.ExecutionId,
-				Commands = new Queue<CommandStatusDto>(commandQueue.Select(x => new CommandStatusDto
+				IsCorrect = true,
+				Commands = [.. result.Select(command => new CommandStatusDto
 				{
-					Type = x.Type,
-					EnergyConsumption = x.EnergyConsumption,
-					IsCompleted = x.IsCompleted
-				}).ToList())
+					Type = command.Type,
+					EnergyConsumption = command.EnergyConsumption,
+					IsValid = command.IsValid,
+					IsCompleted = command.IsCompleted,
+					IsCorrect = true,
+					ExecutionId = request.ExecutionId
+				})]
 			};
 		}
 
@@ -50,9 +58,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		{
 			var commandQueue = new Queue<Command>();
 
-			foreach (var command in request.Commands)
+			foreach (var commandType in request.Commands)
 			{
-				var commandType = command.ToCommand();
 				var energyConsumption = request.EnergyConsumptions[commandType];
 
 				var newCommand = new Command(commandType, energyConsumption);

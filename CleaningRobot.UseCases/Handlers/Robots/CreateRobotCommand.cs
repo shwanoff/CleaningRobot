@@ -1,5 +1,4 @@
 ﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
@@ -21,7 +20,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		{
 			var robot = new Robot(request.Position, request.Battery);
 
-			await _robotRepository.AddAsync(request.ExecutionId, robot);
+			await _robotRepository.AddAsync(robot, request.ExecutionId);
 
 			return new RobotStatusDto
 			{
@@ -29,7 +28,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 				X = robot.Position.X,
 				Y = robot.Position.Y,
 				Facing = robot.Position.Facing,
-				Battery = robot.Battery
+				Battery = robot.Battery,
+				IsCorrect = true
 			};
 		}
 	}

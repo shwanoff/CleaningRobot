@@ -1,9 +1,7 @@
-﻿using CleaningRobot.UseCases.Dto.Base;
-
-namespace CleaningRobot.UseCases.Dto.Output
+﻿namespace CleaningRobot.UseCases.Dto.Output
 {
-    public class ValidationResultStatusDto : StatusDto
+    public class ValidationResultStatusDto : ResultStatusDto
 	{
-        
+        public required bool IsValid { get; set; }
 	}
 }

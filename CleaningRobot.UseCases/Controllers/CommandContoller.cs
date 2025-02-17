@@ -17,7 +17,7 @@ namespace CleaningRobot.UseCases.Controllers
 			var command = new CreateCommandQueueCommand
 			{
 				ExecutionId = executionId,
-				Commands = data.Commands,
+				Commands = data.Commands.Select(x => x.ToCommand()),
 				EnergyConsumptions = data.EnergyConsumptions.ToDictionary(x => x.Key.ToCommand(), x => x.Value)
 			};
 
@@ -26,7 +26,7 @@ namespace CleaningRobot.UseCases.Controllers
 
 		public async Task<string?> ExcecuteAllAsync(Guid executionId)
 		{
-			ExecutionResultStatusDto<Command> result;
+			bool finished = false;
 
 			do
 			{
@@ -35,16 +35,28 @@ namespace CleaningRobot.UseCases.Controllers
 					ExecutionId = executionId
 				};
 
-				result = await _mediator.Send(command);
+				var result = await _mediator.Send(command);
 
-				if (result?.Error != null)
+				if (result == null)
 				{
-					return result.Error;
+					throw new Exception($"Execution {executionId} is not completed");
+				}
+
+				if (!result.IsCorrect)
+				{
+					if (result.Error == "Queue is empty")
+					{
+						finished = true;
+					}
+					else
+					{
+						return result.Error;
+					}
 				}
 			}
-			while (result != null);
+			while (!finished);
 
-			return null;
+			return $"Execution {executionId} is successfully completed";
 		}
 
 		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)

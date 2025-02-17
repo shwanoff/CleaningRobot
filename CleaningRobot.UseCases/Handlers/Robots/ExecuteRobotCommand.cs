@@ -4,20 +4,22 @@ using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Repositories;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
 {
-	public class ExecuteRobotCommand : IRequest<ExecutionResultStatusDto<Robot>>
+	public class ExecuteRobotCommand : IRequest<ExecutionResultStatusDto<RobotStatusDto>>
 	{
-		public Guid ExecutionId { get; set; }
+		public required Guid ExecutionId { get; set; }
 		public required Command Command { get; set; }
 	}
 
-	public class ExecuteRobotCommandHandler(IRepository<Robot> robotRepository) : IRequestHandler<ExecuteRobotCommand, ExecutionResultStatusDto<Robot>>
+	public class ExecuteRobotCommandHandler(IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository) : IRequestHandler<ExecuteRobotCommand, ExecutionResultStatusDto<RobotStatusDto>>
 	{
 		private readonly IRepository<Robot> _robotRepository = robotRepository;
+		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
 
-		public async Task<ExecutionResultStatusDto<Robot>> Handle(ExecuteRobotCommand request, CancellationToken cancellationToken = default)
+		public async Task<ExecutionResultStatusDto<RobotStatusDto>> Handle(ExecuteRobotCommand request, CancellationToken cancellationToken = default)
 		{
 			if (request == null)
 			{
@@ -47,14 +49,40 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			}
 
 			Execute(request.Command, robot);
-			request.Command.IsCompletedByRobot = true;
-			await _robotRepository.UpdateAsync(request.ExecutionId, robot);
 
-			return new ExecutionResultStatusDto<Robot>
+			var newValuesCommand = new Dictionary<string, object>
 			{
-				IsCompleted = true,
-				Result = robot,
-				ExecutionId = request.ExecutionId
+				{ nameof(Command.IsCompletedByRobot), true }
+			};
+
+			var commandResult = await _commandRepository.UpdateFirstAsync(newValuesCommand, request.ExecutionId);
+
+			if (commandResult == null)
+			{
+				throw new InvalidOperationException($"Command '{request.Command}' could not be executed");
+			}
+
+			var result = await _robotRepository.UpdateAsync(robot, request.ExecutionId);
+
+			if (result == null)
+			{
+				throw new InvalidOperationException($"Robot '{robot}' could not be updated");
+			}
+
+			return new ExecutionResultStatusDto<RobotStatusDto>
+			{
+				Result = new RobotStatusDto
+				{
+					X = robot.Position.X,
+					Y = robot.Position.Y,
+					Facing = robot.Position.Facing,
+					Battery = robot.Battery,
+					IsCorrect = true,
+					ExecutionId = request.ExecutionId
+				},
+				IsCorrect = true,
+				ExecutionId = request.ExecutionId,
+				IsCompleted = true
 			};
 		}
 
@@ -96,7 +124,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			ConsumeBattery(robot, energy);
 		}
 
-		private void TurnRight(Robot robot, int energy)
+		private static void TurnRight(Robot robot, int energy)
 		{
 			robot.Position.Facing = robot.Position.Facing switch
 			{
@@ -110,7 +138,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			ConsumeBattery(robot, energy);
 		}
 
-		private void Advance(Robot robot, int energy)
+		private static void Advance(Robot robot, int energy)
 		{
 			var nextPositon = PositionHelper.GetNextPosition(robot.Position, CommandType.Advance);
 			Move(robot, nextPositon);
@@ -118,7 +146,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			ConsumeBattery(robot, energy);
 		}
 
-		private void Back(Robot robot, int energy)
+		private static void Back(Robot robot, int energy)
 		{
 			var nextPositon = PositionHelper.GetNextPosition(robot.Position, CommandType.Back);
 			Move(robot, nextPositon);
@@ -126,17 +154,17 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			ConsumeBattery(robot, energy);
 		}
 
-		private void Clean(Robot robot, int energy)
+		private static void Clean(Robot robot, int energy)
 		{
 			ConsumeBattery(robot, energy);
 		}
 
-		private void ConsumeBattery(Robot robot, int energy)
+		private static void ConsumeBattery(Robot robot, int energy)
 		{
 			robot.Battery -= energy;
 		}
 
-		private void Move(Robot robot, Position newPosition)
+		private static void Move(Robot robot, Position newPosition)
 		{
 			robot.Position.X = newPosition.X;
 			robot.Position.Y = newPosition.Y;

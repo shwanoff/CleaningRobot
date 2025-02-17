@@ -2,6 +2,6 @@
 {
     public abstract class DtoBase
     {
-		public Guid ExecutionId { get; set; }
+		public required Guid ExecutionId { get; set; }
 	}
 }

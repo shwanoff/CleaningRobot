@@ -7,7 +7,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 {
 	public class GetMapQuery : IRequest<MapStatusDto>
 	{
-		public Guid ExecutionId { get; set; }
+		public required Guid ExecutionId { get; set; }
 	}
 
 	public class GetMapQueryHandler(IRepository<Map> mapRepository) : IRequestHandler<GetMapQuery, MapStatusDto>
@@ -28,13 +28,16 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				ExecutionId = request.ExecutionId,
 				Width = map.Width,
 				Height = map.Height,
+				IsCorrect = true,
 				Cells = [.. map.Cells.Cast<Cell>()
 					.Select(c => new CellStatusDto
 					{
 						X = c.Position.X,
 						Y = c.Position.Y,
 						Type = c.Type,
-						State = c.State 
+						State = c.State,
+						ExecutionId = request.ExecutionId,
+						IsCorrect = true
 					})]
 			};
 		}

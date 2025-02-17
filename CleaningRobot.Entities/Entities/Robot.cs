@@ -13,7 +13,7 @@ namespace CleaningRobot.Entities.Entities
 
 		public override string ToString()
 		{
-			return $"({Position.X}, {Position.Y}) Facing: {Position.Facing}, Battery: {Battery}";
+			return $"({Position.X}, {Position.Y}) {Position.Facing} {Battery}";
 		}
 	}
 }

@@ -8,7 +8,7 @@
 
 		public override string ToString()
 		{
-			return $"Map: {Width}x{Height}";
+			return $"{Width}x{Height}";
 		}
 	}
 }

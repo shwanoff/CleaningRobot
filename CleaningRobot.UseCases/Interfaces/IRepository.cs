@@ -6,8 +6,8 @@ namespace CleaningRobot.UseCases.Interfaces
 	{
 		Task<T> GetByIdAsync(Guid executionId);
 		Task<IEnumerable<T>> GetAllAsync();
-		Task AddAsync(Guid executionId, T entity);
-		Task UpdateAsync(Guid executionId, T entity);
+		Task<T> AddAsync(T entity, Guid executionId);
+		Task<T> UpdateAsync(T entity, Guid executionId);
 		Task DeleteAsync(Guid executionId);
 	}
 }

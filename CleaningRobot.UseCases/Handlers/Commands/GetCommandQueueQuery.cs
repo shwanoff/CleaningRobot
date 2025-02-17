@@ -16,6 +16,11 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 		public async Task<CommandQueueStatusDto> Handle(GetCommandQueueQuery request, CancellationToken cancellationToken = default)
 		{
+			if (request == null)
+			{
+				throw new ArgumentNullException(nameof(request), "Request can not be null.");
+			}
+
 			var commandQueue = await _commandRepository.GetByIdAsync(request.ExecutionId);
 
 			if (commandQueue == null)
@@ -25,13 +30,17 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return new CommandQueueStatusDto
 			{
+				IsCorrect = true,
 				ExecutionId = request.ExecutionId,
-				Commands = (Queue<CommandStatusDto>)commandQueue.Select(c => new CommandStatusDto
+				Commands = [.. commandQueue.Select(command => new CommandStatusDto
 				{
-					Type = c.Type,
-					EnergyConsumption = c.EnergyConsumption,
-					IsCompleted = c.IsCompleted
-				})
+					Type = command.Type,
+					EnergyConsumption = command.EnergyConsumption,
+					IsValid = command.IsValid,
+					IsCompleted = command.IsCompleted,
+					IsCorrect = true,
+					ExecutionId = request.ExecutionId
+				})]
 			};
 		}
 	}

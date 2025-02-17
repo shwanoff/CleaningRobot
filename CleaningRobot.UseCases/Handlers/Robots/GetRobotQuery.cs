@@ -29,7 +29,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 				X = robot.Position.X,
 				Y = robot.Position.Y,
 				Facing = robot.Position.Facing,
-				Battery = robot.Battery
+				Battery = robot.Battery,
+				IsCorrect = true
 			};
 		}
 	}

@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
 
 namespace CleaningRobot.UseCases.Repositories
@@ -6,15 +7,22 @@ namespace CleaningRobot.UseCases.Repositories
 	public class CommandRepository : IQueueRepository<Command>, IRepository<Queue<Command>>
 	{
 		private readonly Dictionary<Guid, Queue<Command>> _commands = new();
-		public Task AddAsync(Guid executionId, Queue<Command> entity)
+		public Task<Queue<Command>> AddAsync(Queue<Command> entity, Guid executionId)
 		{
+			if (entity == null)
+			{
+				throw new ArgumentNullException(nameof(entity), "Command queue entity is not provided.");
+			}
+
 			if (_commands.ContainsKey(executionId))
 			{
 				throw new InvalidOperationException("Commands for this execution ID already exist.");
 			}
 
 			_commands[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _commands[executionId];
+
+			return Task.FromResult(result);
 		}
 
 		public Task DeleteAsync(Guid executionId)
@@ -53,14 +61,21 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult<IEnumerable<Command>>(value);
 		}
 
-		public Task<Command> PeekAsync(Guid executionId)
+		public Task<Command?> PeekAsync(Guid executionId)
 		{
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
 				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
 			}
 
-			return Task.FromResult(value.Peek());
+			if (value.Count == 0)
+			{
+				return Task.FromResult<Command?>(null);
+			}
+			else 
+			{ 
+				return Task.FromResult(value.Peek());
+			}
 		}
 
 		public Task<Command?> PullAsync(Guid executionId)
@@ -78,7 +93,7 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult<Command?>(value.Dequeue());
 		}
 
-		public Task PushAsync(Guid executionId, Command entity)
+		public Task PushAsync(Command entity, Guid executionId)
 		{
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
@@ -89,19 +104,36 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.CompletedTask;
 		}
 
-		public Task UpdateAsync(Guid executionId, Queue<Command> entity)
+		public Task<Queue<Command>> UpdateAsync(Queue<Command> entity, Guid executionId)
 		{
-			if (!_commands.ContainsKey(executionId))
+			if (entity == null)
+			{
+				throw new ArgumentNullException(nameof(entity), "Entity is not provided.");
+			}
+
+			if (!_commands.TryGetValue(executionId, out Queue<Command>? queue))
 			{
 				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
 			}
 
 			_commands[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _commands[executionId];
+
+			return Task.FromResult(result);
 		}
 
-		public Task UpdateFirstAsync(Guid executionId, Command entity)
+		public Task<Command> UpdateFirstAsync(Dictionary<string, object> valuesToUpdate, Guid executionId)
 		{
+			if (valuesToUpdate == null)
+			{
+				throw new ArgumentNullException(nameof(valuesToUpdate), "Values to update are not provided.");
+			}
+
+			if (valuesToUpdate.Count == 0)
+			{
+				throw new ArgumentException("Values to update are not provided.");
+			}
+
 			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
 			{
 				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
@@ -113,20 +145,13 @@ namespace CleaningRobot.UseCases.Repositories
 			}
 
 			var currentElement = value.Peek();
-			UpdateFirst(currentElement, entity);
 
-			return Task.CompletedTask;
-		}
+			RepositoryHelper.UpdateItem(currentElement, valuesToUpdate);
+			
+			var resultQueue = _commands[executionId];
+			var result = resultQueue.Peek();
 
-		private static void UpdateFirst(Command currentState, Command newState)
-		{
-			currentState.IsValidatedByCommand = newState.IsValidatedByCommand;
-			currentState.IsValidatedByMap = newState.IsValidatedByMap;
-			currentState.IsValidatedByRobot = newState.IsValidatedByRobot;
-
-			currentState.IsCompletedByCommand = newState.IsCompletedByCommand;
-			currentState.IsCompletedByMap = newState.IsCompletedByMap;
-			currentState.IsCompletedByRobot = newState.IsCompletedByRobot;
+			return Task.FromResult(result);
 		}
 	}
 }

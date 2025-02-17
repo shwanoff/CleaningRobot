@@ -9,5 +9,11 @@ namespace CleaningRobot.UseCases.Dto.Input
 		public required string Facing { get; set; }
 		public required int Battery { get; set; }
 
+		#if DEBUG
+		public override string ToString()
+		{
+			return $"({X}, {Y}) {Facing} {Battery}";
+		}
+		#endif
 	}
 }

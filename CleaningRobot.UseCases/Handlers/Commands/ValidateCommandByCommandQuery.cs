@@ -21,8 +21,10 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
-					Error = "Request cannot be null"
+					IsCorrect = false,
+					IsValid = false,
+					Error = "Request cannot be null",
+					ExecutionId = Guid.Empty
 				};
 			}
 
@@ -30,7 +32,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				return new ValidationResultStatusDto 
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = "Command cannot be null",
 					ExecutionId = request.ExecutionId
 				};
@@ -40,18 +43,35 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = "The energy consumption of a command cannot be negative",
 					ExecutionId = request.ExecutionId
 				};
 			}
 
-			request.Command.IsValidatedByCommand = true;
-			await _commandRepository.UpdateFirstAsync(request.ExecutionId, request.Command);
+			var newValues = new Dictionary<string, object>
+			{
+				{ nameof(Command.IsValidatedByCommand), true }
+			};
+
+			var result = await _commandRepository.UpdateFirstAsync(newValues, request.ExecutionId);
+
+			if (result == null) 
+			{
+				return new ValidationResultStatusDto
+				{
+					IsCorrect = false,
+					IsValid = false,
+					Error = "Cannot update the command after validation",
+					ExecutionId = request.ExecutionId
+				};
+			}
 
 			return new ValidationResultStatusDto
 			{
-				IsCompleted = true,
+				IsCorrect = true,
+				IsValid = true,
 				ExecutionId = request.ExecutionId
 			};
 		}

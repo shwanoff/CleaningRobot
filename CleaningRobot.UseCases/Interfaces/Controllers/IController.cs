@@ -1,5 +1,4 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.UseCases.Dto.Base;
+﻿using CleaningRobot.UseCases.Dto.Base;
 
 namespace CleaningRobot.UseCases.Interfaces.Controllers
 {

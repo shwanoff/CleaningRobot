@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
 
 namespace CleaningRobot.UseCases.Repositories
@@ -6,7 +7,7 @@ namespace CleaningRobot.UseCases.Repositories
 	public class MapRepository : IRepository<Map>
 	{
 		private readonly Dictionary<Guid, Map> _maps = [];
-		public Task AddAsync(Guid executionId, Map entity)
+		public Task<Map> AddAsync(Map entity, Guid executionId)
 		{
 			if (_maps.ContainsKey(executionId))
 			{
@@ -14,7 +15,10 @@ namespace CleaningRobot.UseCases.Repositories
 			}
 
 			_maps[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _maps[executionId];
+
+
+			return Task.FromResult(result);
 		}
 
 		public Task DeleteAsync(Guid executionId)
@@ -43,15 +47,22 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(value);
 		}
 
-		public Task UpdateAsync(Guid executionId, Map entity)
+		public Task<Map> UpdateAsync(Map entity, Guid executionId)
 		{
+			if (entity == null)
+			{
+				throw new ArgumentNullException(nameof(entity), "Map entity cannot be null.");
+			}
+
 			if (!_maps.ContainsKey(executionId))
 			{
 				throw new KeyNotFoundException("Map for this execution ID does not exist.");
 			}
 
 			_maps[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _maps[executionId];
+
+			return Task.FromResult(result);
 		}
 	}
 }

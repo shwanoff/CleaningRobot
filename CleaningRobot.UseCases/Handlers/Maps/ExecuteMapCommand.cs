@@ -3,21 +3,23 @@ using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.UseCases.Repositories;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
 {
-	public class ExecuteMapCommand : IRequest<ExecutionResultStatusDto<Map>>
+	public class ExecuteMapCommand : IRequest<ExecutionResultStatusDto<MapStatusDto>>
 	{
 		public required Guid ExecutionId { get; set; }
 		public required Command Command { get; set; }
 	}
 
-	public class ExecuteMapCommandHandler(IRepository<Map> mapRepository, IRepository<Robot> robotRepository) : IRequestHandler<ExecuteMapCommand, ExecutionResultStatusDto<Map>>
+	public class ExecuteMapCommandHandler(IRepository<Map> mapRepository, IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository) : IRequestHandler<ExecuteMapCommand, ExecutionResultStatusDto<MapStatusDto>>
 	{
 		private readonly IRepository<Map> _mapRepository = mapRepository;
 		private readonly IRepository<Robot> _robotRepository = robotRepository;
+		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
 
-		public async Task<ExecutionResultStatusDto<Map>> Handle(ExecuteMapCommand request, CancellationToken cancellationToken = default)
+		public async Task<ExecutionResultStatusDto<MapStatusDto>> Handle(ExecuteMapCommand request, CancellationToken cancellationToken = default)
 		{
 			if (request == null)
 			{
@@ -53,21 +55,53 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				throw new KeyNotFoundException($"Robot for execution ID {request.ExecutionId} not found.");
 			}
 
-			
-
 			Execute(request.Command, map, robot);
-			request.Command.IsCompletedByMap = true;
-			await _mapRepository.UpdateAsync(request.ExecutionId, map);
 
-			return new ExecutionResultStatusDto<Map>
+			var newValuesCommand = new Dictionary<string, object>
 			{
+				{ nameof(Command.IsCompletedByMap), true }
+			};
+
+			var commandResult = await _commandRepository.UpdateFirstAsync(newValuesCommand, request.ExecutionId);
+
+			if (commandResult == null)
+			{
+				throw new InvalidOperationException($"Command '{request.Command}' could not be executed");
+			}
+
+			var result = await _mapRepository.UpdateAsync(map, request.ExecutionId);
+
+			if (result == null)
+			{
+				throw new InvalidOperationException($"Map for execution ID {request.ExecutionId} could not be updated");
+			}
+
+			return new ExecutionResultStatusDto<MapStatusDto>
+			{
+				Result = new MapStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					Width = result.Width,
+					Height = result.Height,
+					IsCorrect = true,
+					Cells = [.. result.Cells.Cast<Cell>()
+					.Select(c => new CellStatusDto
+					{
+						X = c.Position.X,
+						Y = c.Position.Y,
+						Type = c.Type,
+						State = c.State,
+						ExecutionId = request.ExecutionId,
+						IsCorrect = true
+					})]
+				},
+				IsCorrect = true,
 				IsCompleted = true,
-				Result = map,
 				ExecutionId = request.ExecutionId	
 			};
 		}
 
-		private void Execute(Command command, Map map, Robot robot)
+		private static void Execute(Command command, Map map, Robot robot)
 		{
 			switch (command.Type)
 			{
@@ -76,19 +110,19 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					break;
 				case CommandType.Advance:
 				case CommandType.Back:
-					Visit(map, robot);
+					Move(map, robot);
 					break;
 			}
 
 		}
 
-		private void Clean(Map map, Robot robot)
+		private static void Clean(Map map, Robot robot)
 		{
 			var position = robot.Position;
 			map.Cells[position.X, position.Y].State = CellState.Cleaned;
 		}
 
-		private void Visit(Map map, Robot robot)
+		private static void Move(Map map, Robot robot)
 		{
 			var position = robot.Position;
 			map.Cells[position.X, position.Y].State = CellState.Visited;

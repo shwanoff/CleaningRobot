@@ -22,7 +22,7 @@ namespace CleaningRobot.Entities.Entities
 
 		public override string ToString()
 		{
-			return $"{Type} Consumed energy: {EnergyConsumption}";
+			return $"{Type} {EnergyConsumption}";
 		}
 	}
 }

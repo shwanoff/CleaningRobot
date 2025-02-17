@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
 
 namespace CleaningRobot.UseCases.Repositories
@@ -7,7 +8,7 @@ namespace CleaningRobot.UseCases.Repositories
 	{
 		private readonly Dictionary<Guid, Robot> _robots = [];
 
-		public Task AddAsync(Guid executionId, Robot entity)
+		public Task<Robot> AddAsync(Robot entity, Guid executionId)
 		{
 			if (_robots.ContainsKey(executionId))
 			{
@@ -15,7 +16,9 @@ namespace CleaningRobot.UseCases.Repositories
 			}
 
 			_robots[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _robots[executionId];
+
+			return Task.FromResult(result);
 		}
 
 		public Task DeleteAsync(Guid executionId)
@@ -44,15 +47,22 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(value);
 		}
 
-		public Task UpdateAsync(Guid executionId, Robot entity)
+		public Task<Robot> UpdateAsync(Robot entity, Guid executionId)
 		{
+			if (entity == null)
+			{
+				throw new ArgumentNullException(nameof(entity), "Robot entity cannot be null.");
+			}
+
 			if (!_robots.ContainsKey(executionId))
 			{
 				throw new KeyNotFoundException("Robot for this execution ID does not exist.");
 			}
 
 			_robots[executionId] = entity;
-			return Task.CompletedTask;
+			var result = _robots[executionId];
+
+			return Task.FromResult(result);
 		}
 	}
 }

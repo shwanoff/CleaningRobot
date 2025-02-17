@@ -2,7 +2,6 @@
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
 {
@@ -22,8 +21,10 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
-					Error = "Request cannot be null"
+					IsCorrect = false,
+					IsValid = false,
+					Error = "Request cannot be null",
+					ExecutionId = Guid.Empty
 				};
 			}
 
@@ -31,7 +32,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = "Command cannot be null",
 					ExecutionId = request.ExecutionId
 				};
@@ -41,7 +43,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = "The energy consumption of a command cannot be negative",
 					ExecutionId = request.ExecutionId
 				};
@@ -52,7 +55,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = $"Robot for execution ID {request.ExecutionId} not found.",
 					ExecutionId = request.ExecutionId
 				};
@@ -63,7 +67,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			{
 				return new ValidationResultStatusDto
 				{
-					IsCompleted = false,
+					IsCorrect = false,
+					IsValid = false,
 					Error = error,
 					ExecutionId = request.ExecutionId
 				};
@@ -73,7 +78,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 
 			return new ValidationResultStatusDto
 			{
-				IsCompleted = true,
+				IsCorrect = false,
+				IsValid = true,
 				ExecutionId = request.ExecutionId
 			};
 		}

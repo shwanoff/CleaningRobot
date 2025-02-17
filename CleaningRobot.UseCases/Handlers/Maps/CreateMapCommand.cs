@@ -1,5 +1,4 @@
 ﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
@@ -31,20 +30,28 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			var map = await CreateMapAsync(request);
 
-			await _mapRepository.AddAsync(request.ExecutionId, map);
+			var result = await _mapRepository.AddAsync(map, request.ExecutionId);
+
+			if (result == null)
+			{
+				throw new InvalidOperationException("Map could not be created");
+			}
 
 			return new MapStatusDto
 			{
 				ExecutionId = request.ExecutionId,
 				Width = map.Width,
 				Height = map.Height,
+				IsCorrect = true,
 				Cells = [.. map.Cells.Cast<Cell>()
 					.Select(c => new CellStatusDto 
 					{ 
 						X = c.Position.X, 
 						Y = c.Position.Y, 
 						Type = c.Type, 
-						State = c.State 
+						State = c.State,
+						ExecutionId = request.ExecutionId,
+						IsCorrect = true
 					})]
 			};
 		}
