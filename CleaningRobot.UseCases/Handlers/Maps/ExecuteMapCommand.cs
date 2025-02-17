@@ -3,6 +3,7 @@ using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.UseCases.Enums;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
 {
@@ -91,12 +92,13 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 						Type = c.Type,
 						State = c.State,
 						ExecutionId = request.ExecutionId,
-						IsCorrect = true
+						IsCorrect = true,
 					})]
 				},
 				IsCorrect = true,
 				IsCompleted = true,
-				ExecutionId = request.ExecutionId	
+				ExecutionId = request.ExecutionId,
+				State = ResultState.Ok
 			};
 		}
 

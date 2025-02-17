@@ -5,6 +5,7 @@ using MediatR;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Repositories;
+using CleaningRobot.UseCases.Enums;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
 {
@@ -82,7 +83,8 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 				},
 				IsCorrect = true,
 				ExecutionId = request.ExecutionId,
-				IsCompleted = true
+				IsCompleted = true,
+				State = ResultState.Ok
 			};
 		}
 

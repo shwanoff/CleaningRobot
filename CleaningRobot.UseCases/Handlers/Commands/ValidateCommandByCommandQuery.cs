@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 
@@ -24,7 +25,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					IsCorrect = false,
 					IsValid = false,
 					Error = "Request cannot be null",
-					ExecutionId = Guid.Empty
+					ExecutionId = Guid.Empty,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -35,7 +37,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					IsCorrect = false,
 					IsValid = false,
 					Error = "Command cannot be null",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 			
@@ -46,7 +49,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					IsCorrect = false,
 					IsValid = false,
 					Error = "The energy consumption of a command cannot be negative",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -64,7 +68,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					IsCorrect = false,
 					IsValid = false,
 					Error = "Cannot update the command after validation",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -72,7 +77,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				IsCorrect = true,
 				IsValid = true,
-				ExecutionId = request.ExecutionId
+				ExecutionId = request.ExecutionId,
+				State = ResultState.Ok
 			};
 		}
 	}

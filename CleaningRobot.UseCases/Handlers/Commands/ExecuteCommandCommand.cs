@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 
@@ -62,7 +63,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				},
 				IsCorrect = true,
 				IsCompleted = true,
-				ExecutionId = request.ExecutionId
+				ExecutionId = request.ExecutionId,
+				State = ResultState.Ok
 			};
 		}
 	}

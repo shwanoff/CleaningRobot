@@ -1,5 +1,5 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.UseCases.Dto.Output;
+﻿using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
 using MediatR;
 
@@ -29,7 +29,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = setupRobotResult.Error
+					Error = setupRobotResult.Error,
+					State = setupRobotResult.State
 				};
 			}
 
@@ -41,9 +42,13 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 				if (!executionResult.IsCorrect)
 				{
-					if (executionResult.Error == "Queue is empty")
+					if (executionResult.State == ResultState.QueueIsEmpty)
 					{
 						finished = true;
+					}
+					else if (executionResult.State == ResultState.BackOff)
+					{
+						throw new NotImplementedException("Backoff is not implemented");
 					}
 					else
 					{
@@ -51,7 +56,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 						{
 							ExecutionId = request.ExecutionId,
 							IsCorrect = false,
-							Error = executionResult.Error
+							Error = executionResult.Error,
+							State = executionResult.State
 						};
 					}
 				}
@@ -61,6 +67,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			{
 				ExecutionId = request.ExecutionId,
 				IsCorrect = true,
+				State = ResultState.Ok
 			};
 		}
 

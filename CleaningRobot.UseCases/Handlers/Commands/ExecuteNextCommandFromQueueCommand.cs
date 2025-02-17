@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Base;
 using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Handlers.Robots;
 using CleaningRobot.UseCases.Interfaces;
@@ -35,7 +36,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = "Queue is empty"
+					Error = "Queue is empty",
+					State = ResultState.QueueIsEmpty
 				};
 			}
 
@@ -47,7 +49,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = validationResult.Error
+					Error = validationResult.Error,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -59,7 +62,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = executionResult.Error
+					Error = executionResult.Error,
+					State = ResultState.ExecutionError
 				};
 			}
 
@@ -76,7 +80,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = "Validation of the command failed at the end of operation"
+					Error = "Validation of the command failed at the end of operation",
+					State = ResultState.Error
 				};
 			}
 
@@ -86,7 +91,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = request.ExecutionId,
 					IsCorrect = false,
-					Error = "Execution of the command failed at the end of operation"
+					Error = "Execution of the command failed at the end of operation",
+					State = ResultState.Error
 				};
 			}
 
@@ -104,7 +110,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				ExecutionId = request.ExecutionId,
 				IsCorrect = true,
 				IsCompleted = true,
-					
+				State = ResultState.Ok
 			};
 			
 		}
@@ -135,7 +141,8 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					IsCorrect = true,
 					IsValid = true,
-					ExecutionId = executionId
+					ExecutionId = executionId,
+					State = ResultState.Ok
 				};
 			}
 		}
@@ -169,6 +176,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				{
 					ExecutionId = executionId,
 					IsCorrect = true,
+					State = ResultState.Ok
 				};
 			}
 		}

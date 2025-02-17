@@ -1,9 +1,9 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Dto.Output;
+using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces;
-using CleaningRobot.UseCases.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
@@ -29,7 +29,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = "Request cannot be null",
-					ExecutionId = Guid.Empty
+					ExecutionId = Guid.Empty,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -40,7 +41,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = "Command cannot be null",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -51,7 +53,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = "The energy consumption of a command cannot be negative",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -64,7 +67,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = $"Map for execution ID {request.ExecutionId} not found.",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -77,7 +81,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = $"Robot for execution ID {request.ExecutionId} not found.",
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -88,12 +93,9 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsCorrect = false,
 					IsValid = false,
 					Error = error,
-					ExecutionId = request.ExecutionId
+					ExecutionId = request.ExecutionId,
+					State = ResultState.BackOff
 				};
-			}
-			else
-			{
-				//TODO run back off strategy
 			}
 
 			var newValues = new Dictionary<string, object>
@@ -111,6 +113,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 					IsValid = false,
 					ExecutionId = request.ExecutionId,
 					Error = "Cannot update the command after validation by map",
+					State = ResultState.ValidationError
 				};
 			}
 
@@ -118,7 +121,8 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			{
 				IsCorrect = true,
 				IsValid = true,
-				ExecutionId = request.ExecutionId
+				ExecutionId = request.ExecutionId,
+				State = ResultState.Ok
 			};
 		}
 
