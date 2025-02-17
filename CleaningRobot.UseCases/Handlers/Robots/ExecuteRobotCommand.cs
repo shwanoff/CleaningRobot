@@ -86,7 +86,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			};
 		}
 
-		private void Execute(Command command, Robot robot)
+		private static void Execute(Command command, Robot robot)
 		{
 			switch (command.Type)
 			{
@@ -110,7 +110,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			}
 		}
 
-		private void TurnLeft(Robot robot, int energy)
+		private static void TurnLeft(Robot robot, int energy)
 		{
 			robot.Position.Facing = robot.Position.Facing switch
 			{

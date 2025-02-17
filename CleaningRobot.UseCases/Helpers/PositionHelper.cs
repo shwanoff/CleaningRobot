@@ -28,5 +28,32 @@ namespace CleaningRobot.UseCases.Helpers
 				_ => throw new ArgumentException($"Type '{commandType}' is invalid")
 			};
 		}
+
+		public static bool IsCellAvailable(Map map, Position position, out string? error)
+		{
+			error = null;
+
+			if (position.X < 0 || position.X >= map.Width || position.Y < 0 || position.Y >= map.Height)
+			{
+				error = "The robot cannot be outside the map";
+				return false;
+			}
+
+			var cell = map.Cells[position.Y, position.X];
+
+			if (cell.Type == CellType.Wall)
+			{
+				error = "The robot cannot be on a wall";
+				return false;
+			}
+
+			if (cell.Type == CellType.Column)
+			{
+				error = "The robot cannot be on a column";
+				return false;
+			}
+
+			return true;
+		}
 	}
 }

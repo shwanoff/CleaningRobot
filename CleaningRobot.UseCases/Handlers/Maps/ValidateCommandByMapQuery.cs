@@ -143,32 +143,16 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		private static bool IsNextCellAwailable(Command command, Map map, Robot robot, out string? error)
 		{
-			error = null;
-			var robotPosition = robot.Position;
-			var nextPositon = PositionHelper.GetNextPosition(robotPosition, command.Type);
+			var nextPositon = PositionHelper.GetNextPosition(robot.Position, command.Type);
 
-			if (nextPositon.X < 0 || nextPositon.X >= map.Width || nextPositon.Y < 0 || nextPositon.Y >= map.Height)
+			if (!PositionHelper.IsCellAvailable(map, nextPositon, out error))
 			{
-				error = "The robot cannot move outside the map";
-				return false;
-			}
-
-			var nextCell = map.Cells[nextPositon.Y, nextPositon.X];
-
-
-			if (nextCell.Type == CellType.Wall)
-			{
-				error = "The robot cannot move into a wall";
-				return false;
-			}
-
-			if (nextCell.Type == CellType.Column)
-			{
-				error = "The robot cannot move into a column";
 				return false;
 			}
 
 			return true;
 		}
+
+		
 	}
 }

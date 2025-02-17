@@ -51,6 +51,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			}
 
 			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
+
 			if (robot == null)
 			{
 				return new ValidationResultStatusDto
@@ -61,7 +62,6 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 					ExecutionId = request.ExecutionId
 				};
 			}
-
 
 			if (!IsValidCommandForRobot(request.Command, robot, out string? error))
 			{
@@ -84,7 +84,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			};
 		}
 
-		private bool IsValidCommandForRobot(Command command, Robot robot, out string? error)
+		private static bool IsValidCommandForRobot(Command command, Robot robot, out string? error)
 		{
 			error = null;
 

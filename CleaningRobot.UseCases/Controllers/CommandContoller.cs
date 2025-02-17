@@ -1,5 +1,4 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Extensions;
+﻿using CleaningRobot.Entities.Extensions;
 using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Handlers.Commands;
@@ -24,39 +23,23 @@ namespace CleaningRobot.UseCases.Controllers
 			return await _mediator.Send(command);
 		}
 
-		public async Task<string?> ExcecuteAllAsync(Guid executionId)
+		public async Task<string> ExcecuteAllAsync(Guid executionId)
 		{
-			bool finished = false;
-
-			do
+			var command = new StartCommand
 			{
-				var command = new ExecuteNextCommandFromQueueCommand
-				{
-					ExecutionId = executionId
-				};
+				ExecutionId = executionId
+			};
 
-				var result = await _mediator.Send(command);
+			var result = await _mediator.Send(command);
 
-				if (result == null)
-				{
-					throw new Exception($"Execution {executionId} is not completed");
-				}
-
-				if (!result.IsCorrect)
-				{
-					if (result.Error == "Queue is empty")
-					{
-						finished = true;
-					}
-					else
-					{
-						return result.Error;
-					}
-				}
+			if (!result.IsCorrect)
+			{
+				return $"Error: {result.Error}";
 			}
-			while (!finished);
-
-			return $"Execution {executionId} is successfully completed";
+			else
+			{
+				return $"Execution ID {executionId} completed successfully";
+			}
 		}
 
 		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)
