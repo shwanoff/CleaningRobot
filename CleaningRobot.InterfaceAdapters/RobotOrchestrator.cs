@@ -13,7 +13,8 @@ namespace CleaningRobot.InterfaceAdapters
 		ICommandController commandController,
 		IFileAdapter fileAdapter,
 		IJsonAdapter jsonAdapter,
-		ILogAdapter logAdapter)
+		ILogAdapter logAdapter,
+		EnergyConsumptionConfigurationDto energyConsumptionConfiguration)
 		: IRobotOrchestrator
 	{
 		private readonly IRobotController _robotController = robotController;
@@ -22,6 +23,7 @@ namespace CleaningRobot.InterfaceAdapters
 		private readonly IFileAdapter _fileAdapter = fileAdapter;
 		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly ILogAdapter _logAdapter = logAdapter;
+		private readonly EnergyConsumptionConfigurationDto _energyConfiguration = energyConsumptionConfiguration;
 
 		private readonly Guid _executionId = Guid.NewGuid();
 
@@ -35,17 +37,11 @@ namespace CleaningRobot.InterfaceAdapters
 				var fileContent = await ReadFileAsync(inputFilePath);
 				var inputData = await DeserializeAsync(fileContent);
 
-				//var createMapTask = CreateMapAsync(inputData);
-				//var createRobotTask = CreateRobotAsync(inputData);
-				//var createCommandsTask = CreateCommandsListAsync(inputData);
+				var createMapTask = CreateMapAsync(inputData);
+				var createRobotTask = CreateRobotAsync(inputData);
+				var createCommandsTask = CreateCommandsListAsync(inputData);
 
-				//await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
-
-				await CreateMapAsync(inputData);
-				await CreateRobotAsync(inputData);
-				await CreateCommandsListAsync(inputData);
-
-				await ExecuteCommandsAsync();
+				await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
 
 				var cells = await GetAllCells();
 				var visitedCells = GetVisitedCells(cells);
@@ -109,14 +105,13 @@ namespace CleaningRobot.InterfaceAdapters
 		{
 			Trace("Creating commands list");
 
-			//TODO : Add energy consumption for each command type from configuration
 			var energyConsumptions = new Dictionary<string, int>
 			{
-				[CommandType.TurnLeft.ToString()] = 1,
-				[CommandType.TurnRight.ToString()] = 1,
-				[CommandType.Advance.ToString()] = 2,
-				[CommandType.Back.ToString()] = 3,
-				[CommandType.Clean.ToString()] = 5
+				[CommandType.TurnLeft.ToString()]  = _energyConfiguration?.TurnLeft?.EnergyConsumption  ?? 1,
+				[CommandType.TurnRight.ToString()] = _energyConfiguration?.TurnRight?.EnergyConsumption ?? 1,
+				[CommandType.Advance.ToString()]   = _energyConfiguration?.Advance?.EnergyConsumption   ?? 2,
+				[CommandType.Back.ToString()]	   = _energyConfiguration?.Back?.EnergyConsumption		?? 3,
+				[CommandType.Clean.ToString()]	   = _energyConfiguration?.Clean?.EnergyConsumption		?? 5
 			};
 
 			var data = new CommandDataDto

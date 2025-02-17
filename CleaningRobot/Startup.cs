@@ -1,8 +1,5 @@
 ﻿using CleaningRobot.InterfaceAdapters;
-using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases;
-using CleaningRobot.UseCases.Handlers.Maps;
-using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;

@@ -18,6 +18,7 @@ namespace CleaningRobot.InterfaceAdapters
 			services.AddScoped<IRobotOrchestrator, RobotOrchestrator>();
 
 			services.AddSingleton(configuration.GetSection("Logging").Get<TxtLogConfigurationDto>());
+			services.AddSingleton(configuration.GetSection("Commands").Get<EnergyConsumptionConfigurationDto>());
 
 			return services;
 		}
