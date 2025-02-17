@@ -43,6 +43,8 @@ namespace CleaningRobot.InterfaceAdapters
 
 				await Task.WhenAll(createMapTask, createRobotTask, createCommandsTask);
 
+				await ExecuteCommandsAsync();
+
 				var cells = await GetAllCells();
 				var visitedCells = GetVisitedCells(cells);
 				var cleanedCells = GetCleanedCells(cells);
