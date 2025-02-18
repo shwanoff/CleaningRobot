@@ -1,9 +1,9 @@
-﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.Entities.Enums;
-using CleaningRobot.UseCases.Dto.Output;
+﻿using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
+using CleaningRobot.UseCases.Handlers.Robots;
 using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -13,28 +13,14 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		public required Guid ExecutionId { get; set; }
 	}
 
-	public class StartCommandHandler(IMediator mediator) : IRequestHandler<StartCommand, ResultStatusDto>
+	public class StartCommandHandler(IMediator mediator, IBackoffRepository backoffRepository) : IRequestHandler<StartCommand, ResultStatusDto>
 	{
+		private readonly IBackoffRepository _backoffRepository = backoffRepository;
 		private readonly IMediator _mediator = mediator;
 
 		public async Task<ResultStatusDto> Handle(StartCommand request, CancellationToken cancellationToken)
 		{
 			request.NotNull();
-
-			var setupBackoffResult = await SetupBackoffStrategy(request.ExecutionId);
-
-			{
-				if (!setupBackoffResult.IsCorrect)
-				{
-					return new ResultStatusDto
-					{
-						ExecutionId = request.ExecutionId,
-						IsCorrect = false,
-						Error = setupBackoffResult.Error,
-						State = setupBackoffResult.State
-					};
-				}
-			}
 
 			var setupRobotResult = await SetupRobot(request.ExecutionId);
 
@@ -49,36 +35,66 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				};
 			}
 
-			bool finished = false;
+			bool executionFinished = false;
 
 			do
 			{
-				var executionResult = await ExecuteNextCommand(request.ExecutionId);
+				var queueEexecutionResult = await ExecuteNextFromQueue(request.ExecutionId);
 
-				if (!executionResult.IsCorrect)
+				if (!queueEexecutionResult.IsCorrect)
 				{
-					switch (executionResult.State)
+					switch (queueEexecutionResult.State)
 					{
 						case ResultState.OutOfEnergy:
 						case ResultState.QueueIsEmpty:
-							finished = true;
+							executionFinished = true;
 							break;
 						case ResultState.BackOff:
-							// Consume enerty
-							// Get back off stratagies
-							// Try execute first back off strategy
-							// If success, continue main queue
-							// If not, try next back off strategy
-							// If all back off strategies failed, return error
-							ResultStatusDto backoffResult;
+							if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
+							{
+								await ConsumeEnergy(queueEexecutionResult.Error, request.ExecutionId);
+							}
 
+							bool backoffFinished = false;
 							do
 							{
-								backoffResult = await ExecuteNextBackoff(request.ExecutionId);
-							} while (
-								backoffResult.State != ResultState.Ok ||
-								backoffResult.State != ResultState.QueueIsEmpty ||
-								backoffResult.State != ResultState.QueueIsEmpty);
+								var backoffExecutionResult = await ExecuteNextBackoffStrategy(request.ExecutionId);
+
+								switch (backoffExecutionResult.State)
+								{
+									case ResultState.BackOff:
+										if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
+										{
+											await ConsumeEnergy(backoffExecutionResult.Error, request.ExecutionId);
+										}
+										break;
+									case ResultState.Ok:
+										if (_backoffRepository.Settings.StopWhenBackOff)
+										{
+											executionFinished = true;
+										}
+
+										backoffFinished = true;
+										break;
+									case ResultState.QueueIsEmpty:
+									case ResultState.OutOfEnergy:
+										executionFinished = true;
+										break;
+									case ResultState.Error:
+									case ResultState.ValidationError:
+									case ResultState.ExecutionError:
+										return new ResultStatusDto
+										{
+											ExecutionId = request.ExecutionId,
+											IsCorrect = false,
+											Error = backoffExecutionResult.Error,
+											State = backoffExecutionResult.State
+										};
+									default:
+										throw new NotImplementedException();
+								}
+
+							} while (!backoffFinished);
 
 							continue;
 						case ResultState.Error:
@@ -88,14 +104,14 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 							{
 								ExecutionId = request.ExecutionId,
 								IsCorrect = false,
-								Error = executionResult.Error,
-								State = executionResult.State
+								Error = queueEexecutionResult.Error,
+								State = queueEexecutionResult.State
 							};
 						default:
 							throw new NotImplementedException();
 					}
 				}
-			} while (!finished);
+			} while (!executionFinished);
 
 			return new ResultStatusDto
 			{
@@ -105,9 +121,9 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			};
 		}
 
-		private async Task<ResultStatusDto> ExecuteNextBackoff(Guid executionId)
+		private async Task<ResultStatusDto> ExecuteNextBackoffStrategy(Guid executionId)
 		{
-			var command = new ExecuteNextBackoffStrategyCommand
+			var command = new ExecuteBackoffStrategyCommand
 			{
 				ExecutionId = executionId
 			};
@@ -125,9 +141,9 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			return await _mediator.Send(setupRobotCommand);
 		}
 
-		private async Task<ResultStatusDto> ExecuteNextCommand(Guid executionId)
+		private async Task<ResultStatusDto> ExecuteNextFromQueue(Guid executionId)
 		{
-			var command = new ExecuteNextCommandFromQueueCommand
+			var command = new ExecuteCommandFromQueueCommand
 			{
 				ExecutionId = executionId
 			};
@@ -135,36 +151,15 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			return await _mediator.Send(command);
 		}
 
-		private async Task<ResultStatusDto> SetupBackoffStrategy(Guid executionId)
+		private async Task<ResultStatusDto> ConsumeEnergy(string? energy, Guid executionId)
 		{
-			//TODO fix this
-
-			var command = new SetupBackoffStrategyCommand
+			var consumeEnergyCommand = new ConsumeEnergyCommand
 			{
 				ExecutionId = executionId,
-				BackoffCommands = new List<List<CommandType>>
-				{
-					new List<CommandType>
-					{
-						CommandType.TurnRight,
-						CommandType.Advance,
-						CommandType.TurnLeft,
-					},
-					new List<CommandType>
-					{
-						CommandType.TurnRight,
-						CommandType.Advance,
-						CommandType.TurnRight
-					}
-				},
-				EnergyConsumptions = new Dictionary<CommandType, int>
-				{
-					{ CommandType.TurnRight, 1 },
-					{ CommandType.TurnLeft, 1 },
-					{ CommandType.Advance, 2 }
-				}
+				ConsumedEnergy = int.Parse(energy ?? "0")
 			};
-			return await _mediator.Send(command);
+
+			return await _mediator.Send(consumeEnergyCommand);
 		}
 	}
 }

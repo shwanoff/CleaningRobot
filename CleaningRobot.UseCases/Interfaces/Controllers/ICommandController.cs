@@ -4,7 +4,7 @@ using CleaningRobot.UseCases.Dto.Output;
 
 namespace CleaningRobot.UseCases.Interfaces.Controllers
 {
-	public interface ICommandController : IController<CommandDataDto, CommandQueueStatusDto>
+	public interface ICommandController : IController<CommandDataDto, CommandCollectionStatusDto>
 	{
 		Task<string> ExcecuteAllAsync(Guid executionId);
 	}

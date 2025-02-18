@@ -19,6 +19,7 @@ namespace CleaningRobot.InterfaceAdapters
 
 			services.AddSingleton(configuration.GetSection("Logging").Get<TxtLogConfigurationDto>());
 			services.AddSingleton(configuration.GetSection("Commands").Get<EnergyConsumptionConfigurationDto>());
+			services.AddSingleton(configuration.GetSection("BackOffStrategies").Get<BackOffStrategiesConfigurationDto>());
 
 			return services;
 		}

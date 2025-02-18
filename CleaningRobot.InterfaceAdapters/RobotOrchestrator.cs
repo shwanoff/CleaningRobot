@@ -14,7 +14,8 @@ namespace CleaningRobot.InterfaceAdapters
 		IFileAdapter fileAdapter,
 		IJsonAdapter jsonAdapter,
 		ILogAdapter logAdapter,
-		EnergyConsumptionConfigurationDto energyConsumptionConfiguration)
+		EnergyConsumptionConfigurationDto energyConsumptionConfiguration,
+		BackOffStrategiesConfigurationDto backOffStrategiesConfigurationDto)
 		: IRobotOrchestrator
 	{
 		private readonly IRobotController _robotController = robotController;
@@ -23,7 +24,9 @@ namespace CleaningRobot.InterfaceAdapters
 		private readonly IFileAdapter _fileAdapter = fileAdapter;
 		private readonly IJsonAdapter _jsonAdapter = jsonAdapter;
 		private readonly ILogAdapter _logAdapter = logAdapter;
+
 		private readonly EnergyConsumptionConfigurationDto _energyConfiguration = energyConsumptionConfiguration;
+		private readonly BackOffStrategiesConfigurationDto _backoffConfiguration = backOffStrategiesConfigurationDto;
 
 		private readonly Guid _executionId = Guid.NewGuid();
 
@@ -103,32 +106,31 @@ namespace CleaningRobot.InterfaceAdapters
 			return outputData;
 		}
 
-		private async Task CreateCommandsListAsync(InputDataDto inputData)
+		private async Task<CommandDataDto> CreateCommandsListAsync(InputDataDto inputData)
 		{
 			Trace("Creating commands list");
 
-			var energyConsumptions = new Dictionary<string, int>
-			{
-				[CommandType.TurnLeft.ToString()]  = _energyConfiguration?.TurnLeft?.EnergyConsumption  ?? 1,
-				[CommandType.TurnRight.ToString()] = _energyConfiguration?.TurnRight?.EnergyConsumption ?? 1,
-				[CommandType.Advance.ToString()]   = _energyConfiguration?.Advance?.EnergyConsumption   ?? 2,
-				[CommandType.Back.ToString()]	   = _energyConfiguration?.Back?.EnergyConsumption		?? 3,
-				[CommandType.Clean.ToString()]	   = _energyConfiguration?.Clean?.EnergyConsumption		?? 5
-			};
+			var energyConsumptions = GetEnergyConsumption();
+			var backoffStrategy = GetBackoffStrategy();
 
 			var data = new CommandDataDto
 			{
 				Commands = inputData.Commands,
 				EnergyConsumptions = energyConsumptions,
-				ExecutionId = _executionId
+				ExecutionId = _executionId,
+				BackoffStrategy = backoffStrategy,
+				ConsumeEnergyWhenBackOff = ConsumeEnergyWhenBackOff,
+				StopWhenBackOff = StopWhenBackOff
 			};
 
 			var result = await _commandController.CreateAsync(data, _executionId);
 
 			Trace($"Commands list created {result}");
+
+			return data;
 		}
 
-		private async Task CreateMapAsync(InputDataDto inputData)
+		private async Task<MapDataDto> CreateMapAsync(InputDataDto inputData)
 		{
 			Trace("Creating map");
 
@@ -141,9 +143,11 @@ namespace CleaningRobot.InterfaceAdapters
 			var result = await _mapController.CreateAsync(data, _executionId);
 
 			Trace($"Map created {result}");
+
+			return data;
 		}
 
-		private async Task CreateRobotAsync(InputDataDto inputData)
+		private async Task<RobotDataDto> CreateRobotAsync(InputDataDto inputData)
 		{
 			Trace("Creating robot");
 
@@ -159,6 +163,8 @@ namespace CleaningRobot.InterfaceAdapters
 			var result = await _robotController.CreateAsync(data, _executionId);
 
 			Trace($"Robot created {result}");
+
+			return data;
 		}
 
 		private async Task ExecuteCommandsAsync()
@@ -243,6 +249,28 @@ namespace CleaningRobot.InterfaceAdapters
 		{
 			_logAdapter.InfoAsync($"{message}", _executionId);
 		}
+
+		private Dictionary<string, int> GetEnergyConsumption()
+		{
+			var energyConsumptions = new Dictionary<string, int>
+			{
+				[CommandType.TurnLeft.ToString()] = _energyConfiguration?.TurnLeft?.EnergyConsumption ?? 1,
+				[CommandType.TurnRight.ToString()] = _energyConfiguration?.TurnRight?.EnergyConsumption ?? 1,
+				[CommandType.Advance.ToString()] = _energyConfiguration?.Advance?.EnergyConsumption ?? 2,
+				[CommandType.Back.ToString()] = _energyConfiguration?.Back?.EnergyConsumption ?? 3,
+				[CommandType.Clean.ToString()] = _energyConfiguration?.Clean?.EnergyConsumption ?? 5
+			};
+
+			return energyConsumptions;
+		}
+
+		private IEnumerable<IEnumerable<string>> GetBackoffStrategy()
+		{
+			return _backoffConfiguration.Sequences;
+		}
+
+		private bool StopWhenBackOff => _backoffConfiguration.StopWhenBackOff;
+		private bool ConsumeEnergyWhenBackOff => _backoffConfiguration.ConsumeEnergyWhenBackOff;
 
 		#endregion
 	}

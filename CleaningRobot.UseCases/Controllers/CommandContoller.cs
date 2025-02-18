@@ -11,16 +11,35 @@ namespace CleaningRobot.UseCases.Controllers
 	{
 		private readonly IMediator _mediator = mediator;
 
-		public async Task<CommandQueueStatusDto> CreateAsync(CommandDataDto data, Guid executionId)
+		public async Task<CommandCollectionStatusDto> CreateAsync(CommandDataDto data, Guid executionId)
 		{
-			var command = new CreateCommandQueueCommand
-			{
-				ExecutionId = executionId,
-				Commands = data.Commands.Select(x => x.ToCommand()),
-				EnergyConsumptions = data.EnergyConsumptions.ToDictionary(x => x.Key.ToCommand(), x => x.Value)
-			};
+			var commandSetupResult = await SetupCommandQueue(data, executionId);
 
-			return await _mediator.Send(command);
+			if (!commandSetupResult.IsCorrect)
+			{
+				return new CommandCollectionStatusDto
+				{
+					IsCorrect = false,
+					Error = commandSetupResult.Error,
+					Commands = commandSetupResult.Commands,
+					ExecutionId = executionId
+				};
+			}
+
+			var backoffSetupResult = await SetupBackoffStrategy(data, executionId);
+
+			if (!backoffSetupResult.IsCorrect)
+			{
+				return new CommandCollectionStatusDto
+				{
+					IsCorrect = false,
+					Error = backoffSetupResult.Error,
+					Commands = backoffSetupResult.Commands,
+					ExecutionId = executionId
+				};
+			}
+
+			return commandSetupResult;
 		}
 
 		public async Task<string> ExcecuteAllAsync(Guid executionId)
@@ -42,7 +61,7 @@ namespace CleaningRobot.UseCases.Controllers
 			}
 		}
 
-		public async Task<CommandQueueStatusDto> GetAsync(Guid executionId)
+		public async Task<CommandCollectionStatusDto> GetAsync(Guid executionId)
 		{
 			var query = new GetCommandQueueQuery
 			{
@@ -50,6 +69,35 @@ namespace CleaningRobot.UseCases.Controllers
 			};
 
 			return await _mediator.Send(query);
+		}
+
+		private async Task<CommandCollectionStatusDto> SetupCommandQueue(CommandDataDto data, Guid executionId)
+		{
+			var command = new CreateCommandQueueCommand
+			{
+				ExecutionId = executionId,
+				Commands = data.Commands.Select(x => x.ToCommand()),
+				EnergyConsumptions = data.EnergyConsumptions.ToDictionary(x => x.Key.ToCommand(), x => x.Value)
+			};
+
+			return await _mediator.Send(command);
+		}
+
+		private async Task<CommandCollectionStatusDto> SetupBackoffStrategy(CommandDataDto data, Guid executionId)
+		{
+			var command = new SetupBackoffStrategyCommand
+			{
+				ExecutionId = executionId,
+				BackoffCommands = data.BackoffStrategy.Select(x => x.Select(y => y.ToCommand()).ToList()).ToList(),
+				EnergyConsumptions = data.EnergyConsumptions.ToDictionary(x => x.Key.ToCommand(), x => x.Value),
+				CommandSettings = new CommandSettingsDto
+				{
+					ConsumeEnergyWhenBackOff = data.ConsumeEnergyWhenBackOff,
+					StopWhenBackOff = data.StopWhenBackOff
+				}
+			};
+
+			return await _mediator.Send(command);
 		}
 	}
 }

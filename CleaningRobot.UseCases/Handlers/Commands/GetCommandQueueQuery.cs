@@ -6,16 +6,16 @@ using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
 {
-	public class GetCommandQueueQuery : IRequest<CommandQueueStatusDto>
+	public class GetCommandQueueQuery : IRequest<CommandCollectionStatusDto>
 	{
 		public required Guid ExecutionId { get; set; }
 	}
 
-	public class GetCommandQueueQueryHandler(IRepository<Queue<Command>> commandRepository) : IRequestHandler<GetCommandQueueQuery, CommandQueueStatusDto>
+	public class GetCommandQueueQueryHandler(IRepository<Queue<Command>> commandRepository) : IRequestHandler<GetCommandQueueQuery, CommandCollectionStatusDto>
 	{
 		private readonly IRepository<Queue<Command>> _commandRepository = commandRepository;
 
-		public async Task<CommandQueueStatusDto> Handle(GetCommandQueueQuery request, CancellationToken cancellationToken = default)
+		public async Task<CommandCollectionStatusDto> Handle(GetCommandQueueQuery request, CancellationToken cancellationToken = default)
 		{
 			request.NotNull();
 
@@ -23,7 +23,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				.GetByIdAsync(request.ExecutionId)
 				.NotNull();
 
-			return new CommandQueueStatusDto
+			return new CommandCollectionStatusDto
 			{
 				IsCorrect = true,
 				ExecutionId = request.ExecutionId,

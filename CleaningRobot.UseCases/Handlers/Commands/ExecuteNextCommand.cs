@@ -19,7 +19,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 	public class ExecuteNextCommandHandler(IMediator mediator) : IRequestHandler<ExecuteNextCommand, ResultStatusDto>
 	{
-
 		private readonly IMediator _mediator = mediator;
 
 		public async Task<ResultStatusDto> Handle(ExecuteNextCommand request, CancellationToken cancellationToken)

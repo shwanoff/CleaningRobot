@@ -2,7 +2,7 @@
 
 namespace CleaningRobot.UseCases.Dto.Output
 {
-    public class CommandQueueStatusDto : StatusDtoBase
+    public class CommandCollectionStatusDto : StatusDtoBase
 	{
         public required IReadOnlyList<CommandStatusDto> Commands { get; set; }
 

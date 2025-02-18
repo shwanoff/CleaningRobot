@@ -1,7 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces.Repositories;
-using System.Windows.Input;
 
 namespace CleaningRobot.UseCases.Repositories
 {
@@ -9,6 +9,12 @@ namespace CleaningRobot.UseCases.Repositories
 	{
 		private readonly List<List<Command>> _initialBackoffStrategies = new();
 		private readonly Dictionary<Guid, Queue<Queue<Command>>> _backoffStrategies = new();
+
+		public required CommandSettingsDto Settings { get; set; } = new()
+		{ 
+			ConsumeEnergyWhenBackOff = true,
+			StopWhenBackOff = true
+		};
 
 		public Task<Queue<Queue<Command>>> AddAsync(Queue<Queue<Command>> entity, Guid executionId)
 		{

@@ -1,36 +1,44 @@
 ﻿using CleaningRobot.Entities.Entities;
-using CleaningRobot.UseCases.Dto.Base;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
-using CleaningRobot.UseCases.Handlers.Maps;
-using CleaningRobot.UseCases.Handlers.Robots;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
 {
-	public class ExecuteNextCommandFromQueueCommand : IRequest<ResultStatusDto>
+	public class ExecuteCommandFromQueueCommand : IRequest<ResultStatusDto>
 	{
 		public Guid ExecutionId { get; set; }
 	}
 
-	public class ExecuteNextCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator) : IRequestHandler<ExecuteNextCommandFromQueueCommand, ResultStatusDto>
+	public class ExecuteCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator) : IRequestHandler<ExecuteCommandFromQueueCommand, ResultStatusDto>
 	{
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
 		private readonly IMediator _mediator = mediator;
 
-		public async Task<ResultStatusDto> Handle(ExecuteNextCommandFromQueueCommand request, CancellationToken cancellationToken)
+		public async Task<ResultStatusDto> Handle(ExecuteCommandFromQueueCommand request, CancellationToken cancellationToken)
 		{
 			request.NotNull();
 
 			//TODO: Make transactional
 
-			var command = await _commandRepository
-				.PeekAsync(request.ExecutionId)
-				.NotNull();
+			var command = await _commandRepository.PeekAsync(request.ExecutionId);
+
+			if (command == null)
+			{
+				return new ResultStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = false,
+					Error = "Command cannot be peeked from the queue",
+					State = ResultState.QueueIsEmpty
+				};
+			}
 
 			var executionResult = await ExecuteNext(command, request.ExecutionId);
+
+			var result = await _commandRepository.PullAsync(request.ExecutionId);
 
 			if (!executionResult.IsCorrect)
 			{
@@ -42,9 +50,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					State = executionResult.State
 				};
 			}
-
-
-			var result = await _commandRepository.PullAsync(request.ExecutionId);
 
 			if (result == null)
 			{

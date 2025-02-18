@@ -92,7 +92,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				{
 					IsCorrect = false,
 					IsValid = false,
-					Error = error,
+					Error = request.Command.EnergyConsumption.ToString(),
 					ExecutionId = request.ExecutionId,
 					State = ResultState.BackOff
 				};
@@ -148,6 +148,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			if (!PositionHelper.IsCellAvailable(map, nextPositon, out error))
 			{
+				// TODO consume battery
 				return false;
 			}
 

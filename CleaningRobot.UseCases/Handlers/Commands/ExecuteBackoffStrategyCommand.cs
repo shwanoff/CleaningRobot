@@ -6,21 +6,21 @@ using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
 {
-	public class ExecuteNextBackoffStrategyCommand : IRequest<ResultStatusDto>
+	public class ExecuteBackoffStrategyCommand : IRequest<ResultStatusDto>
 	{
 		public required Guid ExecutionId { get; set; }
 	}
 
-	public class ExecuteNextBackoffStrategyCommandHandler(IBackoffRepository backoffRepository, IMediator mediator) : IRequestHandler<ExecuteNextBackoffStrategyCommand, ResultStatusDto>
+	public class ExecuteBackoffStrategyCommandHandler(IBackoffRepository backoffRepository, IMediator mediator) : IRequestHandler<ExecuteBackoffStrategyCommand, ResultStatusDto>
 	{
 		private readonly IBackoffRepository _backoffRepository = backoffRepository;
 		private readonly IMediator _mediator = mediator;
 
-		public async Task<ResultStatusDto> Handle(ExecuteNextBackoffStrategyCommand request, CancellationToken cancellationToken)
+		public async Task<ResultStatusDto> Handle(ExecuteBackoffStrategyCommand request, CancellationToken cancellationToken)
 		{
 			request.NotNull();
 
-			var backoffStrategies = await _backoffRepository.PullAsync(request.ExecutionId);
+			var backoffStrategies = await _backoffRepository.PeekAsync(request.ExecutionId);
 
 			if (backoffStrategies == null || backoffStrategies.Count == 0)
 			{
@@ -36,10 +36,13 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			foreach (var backoffCommand in backoffStrategies)
 			{
 				backoffCommand.NotNull();
-				var executionResult = await Execute(request, backoffCommand);
+
+				var executionResult = await ExecuteNext(request, backoffCommand);
 
 				if (!executionResult.IsCorrect)
 				{
+					await _backoffRepository.PullAsync(request.ExecutionId);
+
 					return new ResultStatusDto
 					{
 						ExecutionId = request.ExecutionId,
@@ -50,7 +53,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				}
 			}
 
-			var refreshResult = await _backoffRepository
+			await _backoffRepository
 				.Refresh(request.ExecutionId)
 				.NotNull();
 
@@ -62,7 +65,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			};
 		}
 
-		private async Task<ResultStatusDto> Execute(ExecuteNextBackoffStrategyCommand request, Entities.Entities.Command backoffCommand)
+		private async Task<ResultStatusDto> ExecuteNext(ExecuteBackoffStrategyCommand request, Entities.Entities.Command backoffCommand)
 		{
 			var executeCommand = new ExecuteNextCommand()
 			{

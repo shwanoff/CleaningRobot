@@ -1,4 +1,6 @@
-﻿namespace CleaningRobot.UseCases.Interfaces.Repositories
+﻿using CleaningRobot.UseCases.Dto.Input;
+
+namespace CleaningRobot.UseCases.Interfaces.Repositories
 {
     public interface IQueueRepository<T> : IRepository<Queue<T>> where T : class
 	{
