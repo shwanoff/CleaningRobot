@@ -3,7 +3,7 @@ using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
@@ -20,24 +20,15 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		public async Task<ResultStatusDto> Handle(SetupRobotOnMapCommand request, CancellationToken cancellationToken)
 		{
-			if (request == null)
-			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
-			}
+			request.NotNull();
 
-			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
+			var robot = await _robotRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
-			if (robot == null)
-			{
-				throw new KeyNotFoundException($"Robot for execution ID {request.ExecutionId} not found.");
-			}
-
-			var map = await _mapRepository.GetByIdAsync(request.ExecutionId);
-
-			if (map == null)
-			{
-				throw new KeyNotFoundException($"Map for execution ID {request.ExecutionId} not found.");
-			}
+			var map = await _mapRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			var position = robot.Position;
 
@@ -48,12 +39,9 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			Update(map, position);
 
-			var result = await _mapRepository.UpdateAsync(map, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException($"Map for execution ID {request.ExecutionId} could not be updated");
-			}
+			var result = await _mapRepository
+				.UpdateAsync(map, request.ExecutionId)
+				.NotNull();
 
 			return new ExecutionResultStatusDto<MapStatusDto>
 			{

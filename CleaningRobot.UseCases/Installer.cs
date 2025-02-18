@@ -1,7 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Controllers;
-using CleaningRobot.UseCases.Interfaces;
 using CleaningRobot.UseCases.Interfaces.Controllers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using CleaningRobot.UseCases.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +13,7 @@ namespace CleaningRobot.UseCases
 		{
 			services.AddSingleton<IRepository<Robot>, RobotRepository>();
 			services.AddSingleton<IRepository<Map>, MapRepository>();
+			services.AddSingleton<IBackoffRepository, BackoffRepository>();
 			services.AddSingleton<CommandRepository>();
 
 			services.AddSingleton<IRepository<Queue<Command>>>(provider => provider.GetService<CommandRepository>());

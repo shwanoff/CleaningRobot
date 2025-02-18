@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
@@ -18,14 +19,15 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 
 		public async Task<RobotStatusDto> Handle(CreateRobotCommand request, CancellationToken cancellationToken = default)
 		{
+			request.NotNull();
+			request.Position.NotNull();
+			request.Battery.IsPositive();
+
 			var robot = new Robot(request.Position, request.Battery);
 
-			var result = await _robotRepository.AddAsync(robot, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new Exception("Could not create the robot");
-			}
+			var result = await _robotRepository
+				.AddAsync(robot, request.ExecutionId)
+				.NotNull();
 
 			return new RobotStatusDto
 			{

@@ -1,9 +1,10 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Enums;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
 {
@@ -21,60 +22,30 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		public async Task<ExecutionResultStatusDto<MapStatusDto>> Handle(ExecuteMapCommand request, CancellationToken cancellationToken = default)
 		{
-			if (request == null)
-			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
-			}
+			request.NotNull();
+			request.Command.NotNull();
+			request.Command.EnergyConsumption.IsPositive();
+			request.Command.IsValid.IsTrue();
 
-			if (request.Command == null)
-			{
-				throw new ArgumentNullException(nameof(request.Command), "Command cannot be null");
-			}
+			var map = await _mapRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
-			if (request.Command.EnergyConsumption < 0)
-			{
-				throw new ArgumentException("The energy consumption of a command cannot be negative");
-			}
-
-			if (!request.Command.IsValid)
-			{
-				throw new ArgumentException($"Command '{request.Command}' is invalid");
-			}
-
-			var map = await _mapRepository.GetByIdAsync(request.ExecutionId);
-
-			if (map == null)
-			{
-				throw new KeyNotFoundException($"Map for execution ID {request.ExecutionId} not found.");
-			}
-
-			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
-
-			if (robot == null)
-			{
-				throw new KeyNotFoundException($"Robot for execution ID {request.ExecutionId} not found.");
-			}
+			var robot = await _robotRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			Execute(request.Command, map, robot);
 
-			var newValuesCommand = new Dictionary<string, object>
-			{
-				{ nameof(Command.IsCompletedByMap), true }
-			};
+			request.Command.IsCompletedByMap = true;
 
-			var commandResult = await _commandRepository.UpdateFirstAsync(newValuesCommand, request.ExecutionId);
+			var commandResult = await _commandRepository
+				.UpdateFirstAsync(request.Command, request.ExecutionId)
+				.NotNull();
 
-			if (commandResult == null)
-			{
-				throw new InvalidOperationException($"Command '{request.Command}' could not be executed");
-			}
-
-			var result = await _mapRepository.UpdateAsync(map, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException($"Map for execution ID {request.ExecutionId} could not be updated");
-			}
+			var result = await _mapRepository
+				.UpdateAsync(map, request.ExecutionId)
+				.NotNull();
 
 			return new ExecutionResultStatusDto<MapStatusDto>
 			{

@@ -1,23 +1,17 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 
 namespace CleaningRobot.UseCases.Repositories
 {
 	public class CommandRepository : IQueueRepository<Command>, IRepository<Queue<Command>>
 	{
 		private readonly Dictionary<Guid, Queue<Command>> _commands = new();
+		
 		public Task<Queue<Command>> AddAsync(Queue<Command> entity, Guid executionId)
 		{
-			if (entity == null)
-			{
-				throw new ArgumentNullException(nameof(entity), "Command queue entity is not provided.");
-			}
-
-			if (_commands.ContainsKey(executionId))
-			{
-				throw new InvalidOperationException("Commands for this execution ID already exist.");
-			}
+			entity.NotNull();
+			_commands.KeyNotExists(executionId);
 
 			_commands[executionId] = entity;
 			var result = _commands[executionId];
@@ -27,10 +21,7 @@ namespace CleaningRobot.UseCases.Repositories
 
 		public Task DeleteAsync(Guid executionId)
 		{
-			if (!_commands.ContainsKey(executionId))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
 			_commands.Remove(executionId);
 			return Task.CompletedTask;
@@ -43,78 +34,66 @@ namespace CleaningRobot.UseCases.Repositories
 
 		public Task<Queue<Command>> GetByIdAsync(Guid executionId)
 		{
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
-			return Task.FromResult(value);
+			var result = _commands[executionId];
+			return Task.FromResult(result);
 		}
 
 		public Task<IEnumerable<Command>> ReadAllAsync(Guid executionId)
 		{
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
-			return Task.FromResult<IEnumerable<Command>>(value);
+			var result = _commands[executionId];
+			return Task.FromResult<IEnumerable<Command>>(result);
 		}
 
 		public Task<Command?> PeekAsync(Guid executionId)
 		{
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
-			if (value.Count == 0)
+			var result = _commands[executionId];
+
+			if (result.Count == 0)
 			{
 				return Task.FromResult<Command?>(null);
 			}
 			else 
 			{ 
-				return Task.FromResult(value.Peek());
+				return Task.FromResult<Command?>(result.Peek());
 			}
 		}
 
 		public Task<Command?> PullAsync(Guid executionId)
 		{
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
-			if (value.Count == 0)
+			var result = _commands[executionId];
+
+			if (result.Count == 0)
 			{
 				return Task.FromResult<Command?>(null);
 			}
-
-			return Task.FromResult<Command?>(value.Dequeue());
+			else
+			{
+				return Task.FromResult<Command?>(result.Dequeue());
+			}
 		}
 
 		public Task PushAsync(Command entity, Guid executionId)
 		{
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			_commands.KeyExists(executionId);
 
-			value.Enqueue(entity);
+			var result = _commands[executionId];
+			result.Enqueue(entity);
+
 			return Task.CompletedTask;
 		}
 
 		public Task<Queue<Command>> UpdateAsync(Queue<Command> entity, Guid executionId)
 		{
-			if (entity == null)
-			{
-				throw new ArgumentNullException(nameof(entity), "Entity is not provided.");
-			}
-
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? queue))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
+			entity.NotNull();
+			_commands.KeyExists(executionId);
 
 			_commands[executionId] = entity;
 			var result = _commands[executionId];
@@ -122,36 +101,28 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(result);
 		}
 
-		public Task<Command> UpdateFirstAsync(Dictionary<string, object> valuesToUpdate, Guid executionId)
+		public Task<Command> UpdateFirstAsync(Command entity, Guid executionId)
 		{
-			if (valuesToUpdate == null)
-			{
-				throw new ArgumentNullException(nameof(valuesToUpdate), "Values to update are not provided.");
-			}
+			entity.NotNull();
+			_commands.KeyExists(executionId);
 
-			if (valuesToUpdate.Count == 0)
-			{
-				throw new ArgumentException("Values to update are not provided.");
-			}
+			var currentElement = _commands[executionId].Peek();
 
-			if (!_commands.TryGetValue(executionId, out Queue<Command>? value))
-			{
-				throw new KeyNotFoundException("Commands for this execution ID do not exist.");
-			}
-
-			if (value.Count == 0)
-			{
-				throw new InvalidOperationException("The command queue is empty.");
-			}
-
-			var currentElement = value.Peek();
-
-			RepositoryHelper.UpdateItem(currentElement, valuesToUpdate);
+			UpdateItem(currentElement, entity);
 			
-			var resultQueue = _commands[executionId];
-			var result = resultQueue.Peek();
+			var result = _commands[executionId].Peek();
 
 			return Task.FromResult(result);
+		}
+
+		private static void UpdateItem(Command currentElement, Command entity)
+		{
+			currentElement.IsValidatedByMap = entity.IsValidatedByMap;
+			currentElement.IsValidatedByRobot = entity.IsValidatedByRobot;
+			currentElement.IsValidatedByCommand = entity.IsValidatedByCommand;
+			currentElement.IsCompletedByMap = entity.IsCompletedByMap;
+			currentElement.IsCompletedByRobot = entity.IsCompletedByRobot;
+			currentElement.IsCompletedByCommand = entity.IsCompletedByCommand;
 		}
 	}
 }

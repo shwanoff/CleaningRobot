@@ -1,7 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
@@ -18,24 +18,14 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		public async Task<MapStatusDto> Handle(CreateMapCommand request, CancellationToken cancellationToken = default)
 		{
-			if (request == null)
-			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
-			}
-
-			if (request.MapData == null)
-			{
-				throw new ArgumentNullException(nameof(request.MapData), "Map data cannot be null");
-			}
+			request.NotNull();
+			request.MapData.NotNull();
 
 			var map = await CreateMapAsync(request);
 
-			var result = await _mapRepository.AddAsync(map, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException("Map could not be created");
-			}
+			var result = await _mapRepository
+				.AddAsync(map, request.ExecutionId)
+				.NotNull();
 
 			return new MapStatusDto
 			{

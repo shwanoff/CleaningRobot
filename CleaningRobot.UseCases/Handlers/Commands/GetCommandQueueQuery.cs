@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -16,17 +17,11 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 		public async Task<CommandQueueStatusDto> Handle(GetCommandQueueQuery request, CancellationToken cancellationToken = default)
 		{
-			if (request == null)
-			{
-				throw new ArgumentNullException(nameof(request), "Request can not be null.");
-			}
+			request.NotNull();
 
-			var commandQueue = await _commandRepository.GetByIdAsync(request.ExecutionId);
-
-			if (commandQueue == null)
-			{
-				throw new KeyNotFoundException($"Command queue for execution ID {request.ExecutionId} not found.");
-			}
+			var commandQueue = await _commandRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			return new CommandQueueStatusDto
 			{

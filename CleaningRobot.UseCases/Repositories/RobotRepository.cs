@@ -1,6 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 
 namespace CleaningRobot.UseCases.Repositories
 {
@@ -10,10 +10,7 @@ namespace CleaningRobot.UseCases.Repositories
 
 		public Task<Robot> AddAsync(Robot entity, Guid executionId)
 		{
-			if (_robots.ContainsKey(executionId))
-			{
-				throw new InvalidOperationException("Robot for this execution ID already exists.");
-			}
+			_robots.KeyNotExists(executionId);
 
 			_robots[executionId] = entity;
 			var result = _robots[executionId];
@@ -23,10 +20,7 @@ namespace CleaningRobot.UseCases.Repositories
 
 		public Task DeleteAsync(Guid executionId)
 		{
-			if (!_robots.ContainsKey(executionId))
-			{
-				throw new KeyNotFoundException("Robot for this execution ID does not exist.");
-			}
+			_robots.KeyExists(executionId);
 
 			_robots.Remove(executionId);
 			return Task.CompletedTask;
@@ -39,25 +33,16 @@ namespace CleaningRobot.UseCases.Repositories
 
 		public Task<Robot> GetByIdAsync(Guid executionId)
 		{
-			if (!_robots.TryGetValue(executionId, out Robot? value))
-			{
-				throw new KeyNotFoundException("Robot for this execution ID does not exist.");
-			}
+			_robots.KeyExists(executionId);
 
+			var value = _robots[executionId];
 			return Task.FromResult(value);
 		}
 
 		public Task<Robot> UpdateAsync(Robot entity, Guid executionId)
 		{
-			if (entity == null)
-			{
-				throw new ArgumentNullException(nameof(entity), "Robot entity cannot be null.");
-			}
-
-			if (!_robots.ContainsKey(executionId))
-			{
-				throw new KeyNotFoundException("Robot for this execution ID does not exist.");
-			}
+			entity.NotNull();
+			_robots.KeyExists(executionId);
 
 			_robots[executionId] = entity;
 			var result = _robots[executionId];

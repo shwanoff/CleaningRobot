@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
@@ -16,12 +17,11 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 		public async Task<MapStatusDto> Handle(GetMapQuery request, CancellationToken cancellationToken = default)
 		{
-			var map = await _mapRepository.GetByIdAsync(request.ExecutionId);
+			request.NotNull();
 
-			if (map == null)
-			{
-				throw new KeyNotFoundException($"Map for execution ID {request.ExecutionId} not found.");
-			}
+			var map = await _mapRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			return new MapStatusDto
 			{

@@ -1,11 +1,10 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
 using MediatR;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Repositories;
 using CleaningRobot.UseCases.Enums;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
 {
@@ -22,53 +21,26 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 
 		public async Task<ExecutionResultStatusDto<RobotStatusDto>> Handle(ExecuteRobotCommand request, CancellationToken cancellationToken = default)
 		{
-			if (request == null)
-			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
-			}
+			request.NotNull();
+			request.Command.NotNull();
+			request.Command.EnergyConsumption.IsPositive();
+			request.Command.IsValid.IsTrue();
 
-			if (request.Command == null)
-			{
-				throw new ArgumentNullException(nameof(request.Command), "Command cannot be null");
-			}
-
-			if (request.Command.EnergyConsumption < 0)
-			{
-				throw new ArgumentException("The energy consumption of a command cannot be negative");
-			}
-
-			if (!request.Command.IsValid)
-			{
-				throw new ArgumentException($"Command '{request.Command}' is invalid");
-			}
-
-			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
-
-			if (robot == null)
-			{
-				throw new KeyNotFoundException($"Robot for execution ID {request.ExecutionId} not found.");
-			}
+			var robot = await _robotRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			Execute(request.Command, robot);
 
-			var newValuesCommand = new Dictionary<string, object>
-			{
-				{ nameof(Command.IsCompletedByRobot), true }
-			};
+			request.Command.IsCompletedByRobot = true;
 
-			var commandResult = await _commandRepository.UpdateFirstAsync(newValuesCommand, request.ExecutionId);
+			var commandResult = await _commandRepository
+				.UpdateFirstAsync(request.Command, request.ExecutionId)
+				.NotNull();
 
-			if (commandResult == null)
-			{
-				throw new InvalidOperationException($"Command '{request.Command}' could not be executed");
-			}
-
-			var result = await _robotRepository.UpdateAsync(robot, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException($"Robot '{robot}' could not be updated");
-			}
+			var result = await _robotRepository
+				.UpdateAsync(robot, request.ExecutionId)
+				.NotNull();
 
 			return new ExecutionResultStatusDto<RobotStatusDto>
 			{
@@ -143,6 +115,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		private static void Advance(Robot robot, int energy)
 		{
 			var nextPositon = PositionHelper.GetNextPosition(robot.Position, CommandType.Advance);
+
 			Move(robot, nextPositon);
 
 			ConsumeBattery(robot, energy);
@@ -151,6 +124,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		private static void Back(Robot robot, int energy)
 		{
 			var nextPositon = PositionHelper.GetNextPosition(robot.Position, CommandType.Back);
+			
 			Move(robot, nextPositon);
 
 			ConsumeBattery(robot, energy);

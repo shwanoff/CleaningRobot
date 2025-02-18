@@ -1,7 +1,8 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -19,24 +20,15 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 		public async Task<CommandQueueStatusDto> Handle(CreateCommandQueueCommand request, CancellationToken cancellationToken = default)
 		{
-			if (request.Commands == null)
-			{
-				throw new ArgumentNullException(nameof(request.Commands), "Commands cannot be null");
-			}
-
-			if (request.EnergyConsumptions == null)
-			{
-				throw new ArgumentNullException(nameof(request.EnergyConsumptions), "Command energy consumptions cannot be null");
-			}
+			request.NotNull();
+			request.Commands.NotNull();
+			request.EnergyConsumptions.NotNull();
 
 			var commandQueue = await CreateCommandQueueAsync(request);
 
-			var result = await _commandRepository.AddAsync(commandQueue, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException("Command queue could not be created");
-			}
+			var result = await _commandRepository
+				.AddAsync(commandQueue, request.ExecutionId)
+				.NotNull(); ;
 
 			return new CommandQueueStatusDto
 			{

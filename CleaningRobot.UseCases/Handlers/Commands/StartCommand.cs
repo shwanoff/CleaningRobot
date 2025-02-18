@@ -1,6 +1,9 @@
-﻿using CleaningRobot.UseCases.Dto.Output;
+﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Enums;
+using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
+using CleaningRobot.UseCases.Helpers;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -16,9 +19,21 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 		public async Task<ResultStatusDto> Handle(StartCommand request, CancellationToken cancellationToken)
 		{
-			if (request == null)
+			request.NotNull();
+
+			var setupBackoffResult = await SetupBackoffStrategy(request.ExecutionId);
+
 			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
+				if (!setupBackoffResult.IsCorrect)
+				{
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = setupBackoffResult.Error,
+						State = setupBackoffResult.State
+					};
+				}
 			}
 
 			var setupRobotResult = await SetupRobot(request.ExecutionId);
@@ -42,23 +57,42 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 				if (!executionResult.IsCorrect)
 				{
-					if (executionResult.State == ResultState.QueueIsEmpty)
+					switch (executionResult.State)
 					{
-						finished = true;
-					}
-					else if (executionResult.State == ResultState.BackOff)
-					{
-						throw new NotImplementedException("Backoff is not implemented");
-					}
-					else
-					{
-						return new ResultStatusDto
-						{
-							ExecutionId = request.ExecutionId,
-							IsCorrect = false,
-							Error = executionResult.Error,
-							State = executionResult.State
-						};
+						case ResultState.OutOfEnergy:
+						case ResultState.QueueIsEmpty:
+							finished = true;
+							break;
+						case ResultState.BackOff:
+							// Consume enerty
+							// Get back off stratagies
+							// Try execute first back off strategy
+							// If success, continue main queue
+							// If not, try next back off strategy
+							// If all back off strategies failed, return error
+							ResultStatusDto backoffResult;
+
+							do
+							{
+								backoffResult = await ExecuteNextBackoff(request.ExecutionId);
+							} while (
+								backoffResult.State != ResultState.Ok ||
+								backoffResult.State != ResultState.QueueIsEmpty ||
+								backoffResult.State != ResultState.QueueIsEmpty);
+
+							continue;
+						case ResultState.Error:
+						case ResultState.ValidationError:
+						case ResultState.ExecutionError:
+							return new ResultStatusDto
+							{
+								ExecutionId = request.ExecutionId,
+								IsCorrect = false,
+								Error = executionResult.Error,
+								State = executionResult.State
+							};
+						default:
+							throw new NotImplementedException();
 					}
 				}
 			} while (!finished);
@@ -69,6 +103,16 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				IsCorrect = true,
 				State = ResultState.Ok
 			};
+		}
+
+		private async Task<ResultStatusDto> ExecuteNextBackoff(Guid executionId)
+		{
+			var command = new ExecuteNextBackoffStrategyCommand
+			{
+				ExecutionId = executionId
+			};
+
+			return await _mediator.Send(command);
 		}
 
 		private async Task<ResultStatusDto> SetupRobot(Guid executionId)
@@ -88,6 +132,38 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				ExecutionId = executionId
 			};
 
+			return await _mediator.Send(command);
+		}
+
+		private async Task<ResultStatusDto> SetupBackoffStrategy(Guid executionId)
+		{
+			//TODO fix this
+
+			var command = new SetupBackoffStrategyCommand
+			{
+				ExecutionId = executionId,
+				BackoffCommands = new List<List<CommandType>>
+				{
+					new List<CommandType>
+					{
+						CommandType.TurnRight,
+						CommandType.Advance,
+						CommandType.TurnLeft,
+					},
+					new List<CommandType>
+					{
+						CommandType.TurnRight,
+						CommandType.Advance,
+						CommandType.TurnRight
+					}
+				},
+				EnergyConsumptions = new Dictionary<CommandType, int>
+				{
+					{ CommandType.TurnRight, 1 },
+					{ CommandType.TurnLeft, 1 },
+					{ CommandType.Advance, 2 }
+				}
+			};
 			return await _mediator.Send(command);
 		}
 	}

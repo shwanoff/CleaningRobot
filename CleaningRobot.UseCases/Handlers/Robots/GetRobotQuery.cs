@@ -1,6 +1,7 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
@@ -16,12 +17,11 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 
 		public async Task<RobotStatusDto> Handle(GetRobotQuery request, CancellationToken cancellationToken = default)
 		{
-			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
+			request.NotNull();
 
-			if (robot == null)
-			{
-				throw new KeyNotFoundException($"Robot for execution ID {request.ExecutionId} not found.");
-			}
+			var robot = await _robotRepository
+				.GetByIdAsync(request.ExecutionId)
+				.NotNull();
 
 			return new RobotStatusDto
 			{

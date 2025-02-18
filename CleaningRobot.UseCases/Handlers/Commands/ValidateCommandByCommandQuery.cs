@@ -1,7 +1,9 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
+using CleaningRobot.UseCases.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -10,11 +12,13 @@ namespace CleaningRobot.UseCases.Handlers.Commands
     {
 		public required Guid ExecutionId { get; set; }
 		public required Command Command { get; set; }
+		public required bool Backoff { get; set; }
 	}
 
-	public class ValidateCommandByCommandQueryHandler(IQueueRepository<Command> commandRepository) : IRequestHandler<ValidateCommandByCommandQuery, ValidationResultStatusDto>
+	public class ValidateCommandByCommandQueryHandler(IQueueRepository<Command> commandRepository, IBackoffRepository backoffRepository) : IRequestHandler<ValidateCommandByCommandQuery, ValidationResultStatusDto>
 	{
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
+		private readonly IBackoffRepository _backoffRepository = backoffRepository;
 
 		public async Task<ValidationResultStatusDto> Handle(ValidateCommandByCommandQuery request, CancellationToken cancellationToken)
 		{
@@ -54,12 +58,21 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 				};
 			}
 
-			var newValues = new Dictionary<string, object>
-			{
-				{ nameof(Command.IsValidatedByCommand), true }
-			};
+			request.Command.IsValidatedByCommand = true;
 
-			var result = await _commandRepository.UpdateFirstAsync(newValues, request.ExecutionId);
+			Command result;
+			if (request.Backoff)
+			{
+				result = await _backoffRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
+			}
+			else
+			{
+				result = await _commandRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
+			}
 
 			if (result == null) 
 			{

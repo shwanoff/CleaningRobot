@@ -3,7 +3,7 @@ using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Helpers;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
@@ -98,12 +98,9 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				};
 			}
 
-			var newValues = new Dictionary<string, object>
-			{
-				{ nameof(Command.IsValidatedByMap), true }
-			};
+			request.Command.IsValidatedByMap = true;
 
-			var result = await _commandRepository.UpdateFirstAsync(newValues, request.ExecutionId);
+			var result = await _commandRepository.UpdateFirstAsync(request.Command, request.ExecutionId);
 
 			if (result == null)
 			{

@@ -1,7 +1,8 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
-using CleaningRobot.UseCases.Interfaces;
+using CleaningRobot.UseCases.Helpers;
+using CleaningRobot.UseCases.Interfaces.Repositories;
 using MediatR;
 
 namespace CleaningRobot.UseCases.Handlers.Commands
@@ -10,45 +11,36 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 	{
 		public required Guid ExecutionId { get; set; }
 		public required Command Command { get; set; }
+		public required bool Backoff { get; set; }
 	}
 
-	public class ExecuteCommandCommandHandler(IQueueRepository<Command> commandRepository) : IRequestHandler<ExecuteCommandCommand, ExecutionResultStatusDto<CommandStatusDto>>
+	public class ExecuteCommandCommandHandler(IQueueRepository<Command> commandRepository, IBackoffRepository backoffRepository) : IRequestHandler<ExecuteCommandCommand, ExecutionResultStatusDto<CommandStatusDto>>
 	{
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
+		private readonly IBackoffRepository _backoffRepository = backoffRepository;
 
 		public async Task<ExecutionResultStatusDto<CommandStatusDto>> Handle(ExecuteCommandCommand request, CancellationToken cancellationToken = default)
 		{
-			if (request == null)
+			request.NotNull();
+			request.Command.NotNull();
+			request.Command.EnergyConsumption.IsPositive();
+			request.Command.IsValid.IsTrue();
+
+			request.Command.IsCompletedByCommand = true;
+
+			Command result;
+			if (request.Backoff)
 			{
-				throw new ArgumentNullException(nameof(request), "Request cannot be null");
+				result = await _backoffRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
 			}
-
-			if (request.Command == null)
+			else
 			{
-				throw new ArgumentNullException(nameof(request.Command), "Command cannot be null");
-			}
-
-			if (request.Command.EnergyConsumption < 0)
-			{
-				throw new ArgumentException("The energy consumption of a command cannot be negative");
-			}
-
-			if (!request.Command.IsValid)
-			{
-				throw new ArgumentException($"Command '{request.Command}' is invalid");
-			}
-
-			var newValues = new Dictionary<string, object>
-			{
-				{ nameof(Command.IsCompletedByCommand), true }
-			};
-
-			var result = await _commandRepository.UpdateFirstAsync(newValues, request.ExecutionId);
-
-			if (result == null)
-			{
-				throw new InvalidOperationException($"Command '{request.Command}' could not be executed");
-			}
+				result = await _commandRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
+			}	
 
 			return new ExecutionResultStatusDto<CommandStatusDto>
 			{
