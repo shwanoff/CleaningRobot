@@ -147,6 +147,31 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(result);
 		}
 
+		public Task<Command> UpdateFirstAsync(Command entity, Guid executionId)
+		{
+			entity.NotNull();
+			_backoffStrategies.KeyExists(executionId);
+
+			var currentElement = _backoffStrategies[executionId].Peek().Peek();
+
+			UpdateItem(currentElement, entity);
+
+			var result = _backoffStrategies[executionId].Peek().Peek();
+
+			return Task.FromResult(result);
+		}
+
+		#region Private methods
+		private static void UpdateItem(Command currentElement, Command entity)
+		{
+			currentElement.IsValidatedByMap = entity.IsValidatedByMap;
+			currentElement.IsValidatedByRobot = entity.IsValidatedByRobot;
+			currentElement.IsValidatedByCommand = entity.IsValidatedByCommand;
+			currentElement.IsCompletedByMap = entity.IsCompletedByMap;
+			currentElement.IsCompletedByRobot = entity.IsCompletedByRobot;
+			currentElement.IsCompletedByCommand = entity.IsCompletedByCommand;
+		}
+
 		private static void SetupFullBackoffStrategy(IEnumerable<IEnumerable<Command>> newEntity, List<List<Command>> original)
 		{
 			original.Clear();
@@ -176,29 +201,6 @@ namespace CleaningRobot.UseCases.Repositories
 			}
 			_backoffStrategies[executionId] = result;
 		}
-
-		public Task<Command> UpdateFirstAsync(Command entity, Guid executionId)
-		{
-			entity.NotNull();
-			_backoffStrategies.KeyExists(executionId);
-
-			var currentElement = _backoffStrategies[executionId].Peek().Peek();
-
-			UpdateItem(currentElement, entity);
-
-			var result = _backoffStrategies[executionId].Peek().Peek();
-
-			return Task.FromResult(result);
-		}
-
-		private static void UpdateItem(Command currentElement, Command entity)
-		{
-			currentElement.IsValidatedByMap = entity.IsValidatedByMap;
-			currentElement.IsValidatedByRobot = entity.IsValidatedByRobot;
-			currentElement.IsValidatedByCommand = entity.IsValidatedByCommand;
-			currentElement.IsCompletedByMap = entity.IsCompletedByMap;
-			currentElement.IsCompletedByRobot = entity.IsCompletedByRobot;
-			currentElement.IsCompletedByCommand = entity.IsCompletedByCommand;
-		}
+		#endregion
 	}
 }

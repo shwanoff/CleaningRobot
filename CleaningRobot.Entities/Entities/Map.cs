@@ -1,5 +1,4 @@
-﻿using CleaningRobot.Entities.Enums;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text;
 
 namespace CleaningRobot.Entities.Entities
@@ -42,6 +41,10 @@ namespace CleaningRobot.Entities.Entities
 			return $"{Width}x{Height}";
 		}
 
+		/// <summary>
+		/// Generates a string representation of the map, where each cell is represented by its description attribute or type name.
+		/// </summary>
+		/// <returns>A string that represents the map, with each cell's description or type name, separated by '|' for each row.</returns>
 		public string Draw()
 		{
 			var map = new StringBuilder();

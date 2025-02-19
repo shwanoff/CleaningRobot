@@ -136,6 +136,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			}
 		}
 
+		#region Private methods
 		private static bool IsValidCommandForMap(Command command, Map map, Robot robot, out string? error)
 		{
 			error = null;
@@ -166,7 +167,6 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			return true;
 		}
-
-		
+		#endregion
 	}
 }

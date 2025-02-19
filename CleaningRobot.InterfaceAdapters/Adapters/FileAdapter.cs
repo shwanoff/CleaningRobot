@@ -68,7 +68,5 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 		{
 			return Path.IsPathRooted(path);
 		}
-
-
 	}
 }

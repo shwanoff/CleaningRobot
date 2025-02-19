@@ -103,6 +103,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			}
 		}
 
+		#region Private methods
 		private static bool IsValidCommandForRobot(Command command, Robot robot, out string? error)
 		{
 			error = null;
@@ -115,5 +116,6 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 
 			return true;
 		}
+		#endregion
 	}
 }

@@ -71,6 +71,7 @@ namespace CleaningRobot.UseCases.Controllers
 			return await _mediator.Send(query);
 		}
 
+		#region Private methods
 		private async Task<CommandCollectionStatusDto> SetupCommandQueue(CommandDataDto data, Guid executionId)
 		{
 			var command = new CreateCommandQueueCommand
@@ -99,5 +100,6 @@ namespace CleaningRobot.UseCases.Controllers
 
 			return await _mediator.Send(command);
 		}
+		#endregion
 	}
 }

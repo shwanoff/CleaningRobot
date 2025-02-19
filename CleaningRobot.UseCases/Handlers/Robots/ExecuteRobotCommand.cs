@@ -72,6 +72,7 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			}
 		}
 
+		#region Private methods
 		private static void Execute(Command command, Robot robot)
 		{
 			switch (command.Type)
@@ -157,5 +158,6 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 			robot.Position.X = newPosition.X;
 			robot.Position.Y = newPosition.Y;
 		}
+		#endregion
 	}
 }

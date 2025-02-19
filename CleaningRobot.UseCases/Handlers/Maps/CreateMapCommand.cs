@@ -59,11 +59,13 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			}
 		}
 
+		#region Private methods
 		private static Task<Map> CreateMapAsync(CreateMapCommand request)
 		{
 			var cells = MapHelper.ConvertToRectangularArray(request.MapData);
 			var map = new Map(cells);
 			return Task.FromResult(map);
 		}
+		#endregion
 	}
 }

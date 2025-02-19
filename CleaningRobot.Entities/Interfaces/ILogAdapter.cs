@@ -13,6 +13,12 @@
 		/// <returns>A task that represents the asynchronous operation.</returns>
 		Task TraceAsync(string message, Guid executionId);
 
+		/// <summary>
+		/// Logs a debug message asynchronously.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		/// <param name="executionId">The unique identifier for the execution context.</param>
+		/// <returns>A task that represents the asynchronous operation.</returns>
 		Task DebugAsync(string message, Guid executionId);
 
 		/// <summary>

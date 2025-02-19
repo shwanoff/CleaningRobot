@@ -58,6 +58,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			}
 		}
 
+		#region Private methods
 		private static Task<Queue<Command>> CreateCommandQueueAsync(CreateCommandQueueCommand request)
 		{
 			var commandQueue = new Queue<Command>();
@@ -73,5 +74,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return Task.FromResult(commandQueue);
 		}
+		#endregion
 	}
 }

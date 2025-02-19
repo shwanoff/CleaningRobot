@@ -115,6 +115,7 @@ namespace CleaningRobot.UseCases.Repositories
 			return Task.FromResult(result);
 		}
 
+		#region Private methods
 		private static void UpdateItem(Command currentElement, Command entity)
 		{
 			currentElement.IsValidatedByMap = entity.IsValidatedByMap;
@@ -124,5 +125,6 @@ namespace CleaningRobot.UseCases.Repositories
 			currentElement.IsCompletedByRobot = entity.IsCompletedByRobot;
 			currentElement.IsCompletedByCommand = entity.IsCompletedByCommand;
 		}
+		#endregion
 	}
 }

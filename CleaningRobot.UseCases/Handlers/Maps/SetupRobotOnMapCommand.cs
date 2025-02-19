@@ -82,10 +82,12 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			}
 		}
 
+		#region Private methods
 		private static void Update(Map map, Position position)
 		{
 			var cell = map.Cells[position.Y, position.X];
 			cell.State = CellState.Visited;
 		}
+		#endregion
 	}
 }

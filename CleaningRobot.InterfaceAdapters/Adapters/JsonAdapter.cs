@@ -1,7 +1,6 @@
 ﻿using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.InterfaceAdapters.JsonConverters;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace CleaningRobot.InterfaceAdapters.Adapters

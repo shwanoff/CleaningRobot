@@ -1,0 +1,48 @@
+﻿{
+  "Logging": {
+    "LogLevel": {
+      "Trace": false,
+      "Debug": false,
+      "Info": false,
+      "Warning": false,
+      "Error": false
+    },
+    "TextLog": {
+      "Path": "Logs",
+      "FileNameFormat": "cleaning_robot_log_{0:yyyyMMdd}.log"
+    }
+  },
+  "Commands": {
+    "TurnLeft": {
+      "Command": "TL",
+      "EnergyConsumption": 1
+    },
+    "TurnRight": {
+      "Command": "TR",
+      "EnergyConsumption": 1
+    },
+    "Advance": {
+      "Command": "A",
+      "EnergyConsumption": 2
+    },
+    "Back": {
+      "Command": "B",
+      "EnergyConsumption": 3
+    },
+    "Clean": {
+      "Command": "C",
+      "EnergyConsumption": 5
+    }
+  },
+  "BackOffStrategies": {
+    "Sequences": [
+      [ "TR", "A", "TL" ],
+      [ "TR", "A", "TR" ],
+      [ "TR", "A", "TR" ],
+      [ "TR", "B", "TR", "A" ],
+      [ "TL", "TL", "A" ]
+    ],
+    "ConsumeEnergyWhenBackOff": true,
+    "StopWhenBackOff": false
+  }
+}

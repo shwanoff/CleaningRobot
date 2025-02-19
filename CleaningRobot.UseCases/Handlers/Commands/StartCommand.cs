@@ -135,6 +135,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			}
 		}
 
+		#region Private methods
 		private async Task<ResultStatusDto> ExecuteNextBackoffStrategy(Guid executionId)
 		{
 			var command = new ExecuteBackoffStrategyCommand
@@ -175,5 +176,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return await _mediator.Send(consumeEnergyCommand);
 		}
+		#endregion
 	}
 }

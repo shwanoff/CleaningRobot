@@ -79,6 +79,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			}
 		}
 
+		#region Private methods
 		private async Task<ResultStatusDto> ExecuteNext(ExecuteBackoffStrategyCommand request, Entities.Entities.Command backoffCommand)
 		{
 			var executeCommand = new ExecuteNextCommand()
@@ -90,5 +91,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return await _mediator.Send(executeCommand);
 		}
+		#endregion
 	}
 }

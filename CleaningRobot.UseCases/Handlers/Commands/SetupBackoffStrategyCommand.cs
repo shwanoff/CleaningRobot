@@ -68,6 +68,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			}
 		}
 
+		#region Private methods
 		private static Queue<Queue<Command>> Setup(SetupBackoffStrategyCommand request)
 		{
 			var resultQueueOfQueues = new Queue<Queue<Command>>();
@@ -90,5 +91,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return resultQueueOfQueues;
 		}
+		#endregion
 	}
 }

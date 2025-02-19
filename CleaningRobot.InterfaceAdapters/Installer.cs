@@ -2,7 +2,6 @@
 using CleaningRobot.InterfaceAdapters.Adapters;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
-using CleaningRobot.UseCases;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

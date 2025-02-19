@@ -86,6 +86,7 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 			}
 		}
 
+		#region Private methods
 		private static void Execute(Command command, Map map, Robot robot)
 		{
 			switch (command.Type)
@@ -116,5 +117,6 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 				cell.State = CellState.Visited;
 			}
 		}
+		#endregion
 	}
 }

@@ -74,6 +74,7 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 			}
 		}
 
+		#region Private methods
 		private async Task<ValidationResultStatusDto> ValidateCommand(Command command, bool backoff, Guid executionId)
 		{
 			var commandValidation = ValidateByCommand(command,backoff, executionId);
@@ -202,5 +203,6 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 
 			return await _mediator.Send(executeByRobot);
 		}
+		#endregion
 	}
 }
