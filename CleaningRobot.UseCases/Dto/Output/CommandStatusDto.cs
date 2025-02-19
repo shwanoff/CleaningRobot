@@ -10,13 +10,5 @@ namespace CleaningRobot.UseCases.Dto.Output
 
 		public required bool IsValid { get; set; }
 		public required bool IsCompleted { get; set; }
-
-#if DEBUG
-		public override string ToString()
-		{
-			var success = IsCorrect ? "Success" : "Failed";
-			return $"[{success}] {Type} {EnergyConsumption}";
-		}
-		#endif
 	}
 }

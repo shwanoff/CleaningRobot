@@ -7,13 +7,5 @@ namespace CleaningRobot.UseCases.Dto.Output
 	{
 		public required bool IsCompleted { get; set; }
 		public required T Result { get; set; }
-
-		#if DEBUG
-		public override string ToString()
-		{
-			var success = IsCorrect ? "Success" : "Failed";
-			return $"[{success}] {Result}";
-		}
-		#endif
 	}
 }

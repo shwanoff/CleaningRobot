@@ -1,6 +1,4 @@
-﻿using CleaningRobot.Entities.Entities;
-
-namespace CleaningRobot.UseCases.Interfaces.Repositories
+﻿namespace CleaningRobot.UseCases.Interfaces.Repositories
 {
 	public interface IRepository<T> where T : class
 	{

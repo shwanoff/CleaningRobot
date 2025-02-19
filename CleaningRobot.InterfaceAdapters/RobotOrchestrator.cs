@@ -71,27 +71,27 @@ namespace CleaningRobot.InterfaceAdapters
 		#region Private methods
 		private async Task SaveOutputAsync(string outputFilePath, string result, bool replace)
 		{
-			Trace($"Writing output to file '{outputFilePath}'");
+			Info($"Writing output to file '{outputFilePath}'");
 
 			await _fileAdapter.WriteAsync(outputFilePath, result, replace);
 
-			Trace($"Output written to file '{outputFilePath}'");
+			Info($"Output written to file '{outputFilePath}' successfully");
 		}
 
 		private async Task<string> SerializeAsync(OutputDataDto outputData)
 		{
-			Trace("Serializing output data");
+			Info("Serializing output data");
 
 			var result = await _jsonAdapter.SerializeAsync(outputData);
 
-			Trace($"Output data serialized: {result}");
+			Info($"Output data serialized successfully");
 
 			return result;
 		}
 
 		private OutputDataDto CreateOutputData(IEnumerable<CellStatusDto> visitedCells, IEnumerable<CellStatusDto> cleanedCells, RobotStatusDto robot)
 		{
-			Trace("Creating output data");
+			Info("Creating output data");
 
 			var outputData = new OutputDataDto
 			{
@@ -101,14 +101,14 @@ namespace CleaningRobot.InterfaceAdapters
 				Battery = robot.Battery,
 			};
 
-			Trace($"Output data created: {outputData}");
+			Info($"Output data created successfully");
 
 			return outputData;
 		}
 
 		private async Task<CommandDataDto> CreateCommandsListAsync(InputDataDto inputData)
 		{
-			Trace("Creating commands list");
+			Info("Creating commands list");
 
 			var energyConsumptions = GetEnergyConsumption();
 			var backoffStrategy = GetBackoffStrategy();
@@ -125,14 +125,14 @@ namespace CleaningRobot.InterfaceAdapters
 
 			var result = await _commandController.CreateAsync(data, _executionId);
 
-			Trace($"Commands list created {result}");
+			Info($"Commands list created successfully");
 
 			return data;
 		}
 
 		private async Task<MapDataDto> CreateMapAsync(InputDataDto inputData)
 		{
-			Trace("Creating map");
+			Info("Creating map");
 
 			var data = new MapDataDto
 			{
@@ -142,14 +142,14 @@ namespace CleaningRobot.InterfaceAdapters
 
 			var result = await _mapController.CreateAsync(data, _executionId);
 
-			Trace($"Map created {result}");
+			Info($"Map created successfully");
 
 			return data;
 		}
 
 		private async Task<RobotDataDto> CreateRobotAsync(InputDataDto inputData)
 		{
-			Trace("Creating robot");
+			Info("Creating robot");
 
 			var data = new RobotDataDto
 			{
@@ -162,25 +162,25 @@ namespace CleaningRobot.InterfaceAdapters
 
 			var result = await _robotController.CreateAsync(data, _executionId);
 
-			Trace($"Robot created {result}");
+			Info($"Robot created successfully");
 
 			return data;
 		}
 
 		private async Task ExecuteCommandsAsync()
 		{
-			Trace("Executing all commands");
+			Info("Executing all commands");
 
 			var result = await _commandController.ExcecuteAllAsync(_executionId);
 
-			Trace($"All commands executed {result}");
+			Info($"All commands executed successfully");
 		}
 
 		private async Task<RobotStatusDto> GetRobotStatusAsync()
 		{
 			var robot = await _robotController.GetAsync(_executionId);
 
-			Trace($"Robot status: {robot}");
+			Info($"Robot status received successfully");
 
 			return robot;
 		}
@@ -189,7 +189,7 @@ namespace CleaningRobot.InterfaceAdapters
 		{
 			var cells = await _mapController.GetAsync(_executionId);
 
-			Trace($"All cells: {cells}");
+			Info($"All cell received successfully");
 
 			return cells.Cells;
 		}
@@ -198,7 +198,7 @@ namespace CleaningRobot.InterfaceAdapters
 		{
 			var visitedCells = cells.Where(c => c.State == CellState.Visited || c.State == CellState.Cleaned);
 
-			Trace($"Visited cells: {visitedCells}");
+			Info($"Visited cells received successfully");
 
 			return visitedCells;
 		}
@@ -207,7 +207,7 @@ namespace CleaningRobot.InterfaceAdapters
 		{
 			var cleanedCells = cells.Where(c => c.State == CellState.Cleaned);
 
-			Trace($"Cleaned cells: {cleanedCells}");
+			Info($"Cleaned cells received successfully");
 
 			return cleanedCells;
 		}
@@ -219,33 +219,33 @@ namespace CleaningRobot.InterfaceAdapters
 				throw new ArgumentException(error);
 			}
 
-			Trace($"Input file path validated successfully: {filePath}");
+			Info("Input file path validated successfully");
 		}
 
 		private async Task<string> ReadFileAsync(string filePath)
 		{
-			Trace($"Reading file '{filePath}'");
+			Info($"Reading file '{filePath}'");
 
 			var fileContent = await _fileAdapter.ReadAsync(filePath);
 
-			Trace($"File '{filePath}' read successfully. Content: {fileContent}");
+			Info($"File '{filePath}' read successfully");
 
 			return fileContent;
 		}
 
 		private async Task<InputDataDto> DeserializeAsync(string fileContent)
 		{
-			Trace("Deserializing input data");
+			Info("Deserializing input data");
 
 			var inputData = await _jsonAdapter.DeserializeAsync<InputDataDto>(fileContent);
 
 
-			Trace($"Input data {fileContent} deserialized: {inputData}");
+			Info($"Input data deserialized sucessfully");
 
 			return inputData;
 		}
 
-		private void Trace(string message)
+		private void Info(string message)
 		{
 			_logAdapter.InfoAsync($"{message}", _executionId);
 		}

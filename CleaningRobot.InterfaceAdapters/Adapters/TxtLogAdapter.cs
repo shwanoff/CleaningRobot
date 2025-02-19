@@ -32,6 +32,14 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 			}
 		}
 
+		public async Task TraceAsync(string message, Guid executionId)
+		{
+			if (_configuration.LogLevel.Trace)
+			{
+				await Write(message, "Info", executionId);
+			}
+		}
+
 		private async Task Write(string message, string type, Guid executionId, Exception? ex = null)
 		{
 			string dirctory;

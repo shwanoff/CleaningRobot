@@ -1,6 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
-using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces.Repositories;

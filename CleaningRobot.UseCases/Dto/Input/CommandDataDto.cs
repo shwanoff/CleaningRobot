@@ -9,12 +9,5 @@ namespace CleaningRobot.UseCases.Dto.Input
 		public required IEnumerable<IEnumerable<string>> BackoffStrategy { get; set; }
 		public required bool StopWhenBackOff { get; set; }
 		public required bool ConsumeEnergyWhenBackOff { get; set; }
-
-		#if DEBUG
-		public override string ToString()
-		{
-			return $"Commands: {string.Join(", ", Commands)}";
-		}
-		#endif
 	}
 }

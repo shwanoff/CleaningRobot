@@ -148,7 +148,6 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 
 			if (!PositionHelper.IsCellAvailable(map, nextPositon, out error))
 			{
-				// TODO consume battery
 				return false;
 			}
 

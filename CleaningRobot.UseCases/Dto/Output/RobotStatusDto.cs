@@ -9,13 +9,5 @@ namespace CleaningRobot.UseCases.Dto.Output
 		public required int Y { get; set; }
 		public required Facing Facing { get; set; }
 		public required int Battery { get; set; }
-
-		#if DEBUG
-		public override string ToString()
-		{
-			var success = IsCorrect ? "Success" : "Failed";
-			return $"[{success}] ({X}, {Y}) {Facing} {Battery}";
-		}
-		#endif
 	}
 }
