@@ -65,7 +65,7 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 
 			var text = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}];[{type}];[{executionId}];{message};{exceptionMessage};{exceptionSource};{exceptionStackTrace}{Environment.NewLine}";
 
-			await _fileAdapter.WriteAsync(fullPath, text, replase: false);
+			await _fileAdapter.WriteAsync(fullPath, text, replace: false);
 		}
 	}
 }

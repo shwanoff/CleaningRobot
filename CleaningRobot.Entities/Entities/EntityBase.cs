@@ -1,7 +1,10 @@
 ﻿namespace CleaningRobot.Entities.Entities
 {
-    public abstract class EntityBase
-    {
-        
-    }
+	/// <summary>
+	/// Represents the base class for all entities in the cleaning robot system.
+	/// </summary>
+	public abstract class EntityBase
+	{
+		
+	}
 }
