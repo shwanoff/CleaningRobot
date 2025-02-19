@@ -20,7 +20,8 @@ namespace CleaningRobot.Tests.UnitTests.InterfaceAdapters.Adapters
 		{
 			var robotPosition = new RobotPosition(1, 2, Facing.North);
 			var json = await _jsonAdapter.SerializeAsync(robotPosition);
-			Assert.That(json, Is.EqualTo("{\r\n  \"Facing\": \"N\",\r\n  \"X\": 1,\r\n  \"Y\": 2\r\n}"));
+			var expectedJson = "{\n  \"Facing\": \"N\",\n  \"X\": 1,\n  \"Y\": 2\n}";
+			Assert.That(Normalize(json), Is.EqualTo(expectedJson));
 		}
 
 		[Test]
@@ -31,6 +32,11 @@ namespace CleaningRobot.Tests.UnitTests.InterfaceAdapters.Adapters
 			Assert.That(robotPosition.X, Is.EqualTo(1));
 			Assert.That(robotPosition.Y, Is.EqualTo(2));
 			Assert.That(robotPosition.Facing, Is.EqualTo(Facing.North));
+		}
+
+		private static string Normalize(string json)
+		{
+			return json.Replace("\r\n", "\n").Replace("\r", "\n");
 		}
 	}
 }
