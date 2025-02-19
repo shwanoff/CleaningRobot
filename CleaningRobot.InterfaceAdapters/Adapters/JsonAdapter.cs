@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.InterfaceAdapters.Interfaces;
+using CleaningRobot.InterfaceAdapters.JsonConverters;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -9,14 +10,15 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 	{
 		private readonly JsonSerializerOptions _deserializeOptions = new()
 		{
-			PropertyNameCaseInsensitive = true
+			PropertyNameCaseInsensitive = true,
+			Converters = { new FacingJsonConverter() }
 		};
 
 		private readonly JsonSerializerOptions _serializeOptions = new()
 		{
 			PropertyNamingPolicy = null,
 			WriteIndented = true,
-			Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+			Converters = { new FacingJsonConverter() }
 		};
 
 		public async Task<T> DeserializeAsync<T>(string json)

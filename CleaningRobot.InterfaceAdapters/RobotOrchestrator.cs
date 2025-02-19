@@ -97,7 +97,7 @@ namespace CleaningRobot.InterfaceAdapters
 			{
 				Visited = visitedCells.Select(c => new PositionDto { X = c.X, Y = c.Y }).ToList(),
 				Cleaned = cleanedCells.Select(c => new PositionDto { X = c.X, Y = c.Y }).ToList(),
-				Final = new RobotPositionDto { X = robot.X, Y = robot.Y, Facing = robot.Facing.ToString() },
+				Final = new RobotPositionDto { X = robot.X, Y = robot.Y, Facing = robot.Facing.ToString()[..1] },
 				Battery = robot.Battery,
 			};
 
