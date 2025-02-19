@@ -1,4 +1,8 @@
-﻿namespace CleaningRobot.Entities.Entities
+﻿using CleaningRobot.Entities.Enums;
+using System.ComponentModel;
+using System.Text;
+
+namespace CleaningRobot.Entities.Entities
 {
 	/// <summary>
 	/// Represents a map consisting of cells for the cleaning robot.
@@ -36,6 +40,23 @@
 		public override string ToString()
 		{
 			return $"{Width}x{Height}";
+		}
+
+		public string Draw()
+		{
+			var map = new StringBuilder();
+			for (int y = 0; y < Height; y++)
+			{
+				for (int x = 0; x < Width; x++)
+				{
+					var cellType = Cells[x, y].Type;
+					var fieldInfo = cellType.GetType().GetField(cellType.ToString());
+					var descriptionAttribute = fieldInfo?.GetCustomAttributes(typeof(DescriptionAttribute), false).FirstOrDefault() as DescriptionAttribute;
+					_ = map.Append(descriptionAttribute != null ? descriptionAttribute.Description : cellType.ToString());
+				}
+				map.Append('|');
+			}
+			return map.ToString();
 		}
 	}
 }

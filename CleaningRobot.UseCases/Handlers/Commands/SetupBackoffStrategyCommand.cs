@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Helpers;
@@ -16,34 +17,40 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		public required CommandSettingsDto CommandSettings { get; set; }
 	}
 
-	public class SetupBackoffStrategyCommandHandler(IBackoffRepository backoffRepository) : IRequestHandler<SetupBackoffStrategyCommand, CommandCollectionStatusDto>
+	public class SetupBackoffStrategyCommandHandler(IBackoffRepository backoffRepository, ILogAdapter logAdapter) : IRequestHandler<SetupBackoffStrategyCommand, CommandCollectionStatusDto>
 	{
 		private readonly IBackoffRepository _backoffRepository = backoffRepository;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<CommandCollectionStatusDto> Handle(SetupBackoffStrategyCommand request, CancellationToken cancellationToken)
 		{
-			request.NotNull();
-			request.BackoffCommands.NotNull();
-			request.BackoffCommands.HasItems();
-			request.EnergyConsumptions.NotNull();
-			request.EnergyConsumptions.HasItems();
-
-			var resultQueueOfQueues = Setup(request);
-
-			var result = await _backoffRepository.Initialize(resultQueueOfQueues, request.ExecutionId);
-
-			result.NotNull();
-			result.HasItems();
-
-			_backoffRepository.Settings = request.CommandSettings;
-
-			var allCommands = result.SelectMany(queue => queue).ToList();
-
-			return new CommandCollectionStatusDto
+			try
 			{
-				ExecutionId = request.ExecutionId,
-				IsCorrect = true,
-				Commands = [.. allCommands.Select(c => new CommandStatusDto
+				request.NotNull();
+				request.BackoffCommands.NotNull();
+				request.BackoffCommands.HasItems();
+				request.EnergyConsumptions.NotNull();
+				request.EnergyConsumptions.HasItems();
+
+				var resultQueueOfQueues = Setup(request);
+
+				var result = await _backoffRepository.Initialize(resultQueueOfQueues, request.ExecutionId);
+
+				result.NotNull();
+				result.HasItems();
+
+				_backoffRepository.Settings = request.CommandSettings;
+
+				var allCommands = result.SelectMany(queue => queue).ToList();
+
+				await _logAdapter.TraceAsync($"Backoff settings: StopWhenBackoff - {request.CommandSettings.StopWhenBackOff}, ConsumeEnergyWhenBackoff - {request.CommandSettings.ConsumeEnergyWhenBackOff}", request.ExecutionId);
+				await _logAdapter.TraceAsync($"Backoff strategy setup. Commands {string.Join(',', allCommands)}", request.ExecutionId);
+
+				return new CommandCollectionStatusDto
+				{
+					ExecutionId = request.ExecutionId,
+					IsCorrect = true,
+					Commands = [.. allCommands.Select(c => new CommandStatusDto
 				{
 					Type = c.Type,
 					EnergyConsumption = c.EnergyConsumption,
@@ -52,7 +59,13 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 					IsCompleted = c.IsCompleted,
 					ExecutionId = request.ExecutionId
 				})]
-			};
+				};
+			}
+			catch (Exception ex)
+			{
+				await _logAdapter.ErrorAsync(ex.Message, nameof(SetupBackoffStrategyCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
+			}
 		}
 
 		private static Queue<Queue<Command>> Setup(SetupBackoffStrategyCommand request)

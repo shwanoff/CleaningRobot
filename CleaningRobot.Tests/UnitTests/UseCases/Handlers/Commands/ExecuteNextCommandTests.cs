@@ -7,6 +7,7 @@ using Moq;
 using MediatR;
 using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Handlers.Robots;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 {
@@ -14,13 +15,15 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 	public class ExecuteNextCommandTests
 	{
 		private Mock<IMediator> _mediatorMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private ExecuteNextCommandHandler _handler;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_mediatorMock = new Mock<IMediator>();
-			_handler = new ExecuteNextCommandHandler(_mediatorMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new ExecuteNextCommandHandler(_mediatorMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Robots;
 using CleaningRobot.UseCases.Interfaces.Repositories;
@@ -11,13 +12,15 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Robots
 	public class ValidateCommandByRobotQueryHandlerTests
 	{
 		private Mock<IRepository<Robot>> _robotRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private ValidateCommandByRobotQueryHandler _handler;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_robotRepositoryMock = new Mock<IRepository<Robot>>();
-			_handler = new ValidateCommandByRobotQueryHandler(_robotRepositoryMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new ValidateCommandByRobotQueryHandler(_robotRepositoryMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

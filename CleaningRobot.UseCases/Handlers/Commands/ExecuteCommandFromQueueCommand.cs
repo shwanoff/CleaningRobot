@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Helpers;
@@ -12,94 +13,105 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		public Guid ExecutionId { get; set; }
 	}
 
-	public class ExecuteCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator) : IRequestHandler<ExecuteCommandFromQueueCommand, ResultStatusDto>
+	public class ExecuteCommandFromQueueCommandHandler(IQueueRepository<Command> commandRepository, IMediator mediator, ILogAdapter logAdapter) : IRequestHandler<ExecuteCommandFromQueueCommand, ResultStatusDto>
 	{
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
 		private readonly IMediator _mediator = mediator;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ResultStatusDto> Handle(ExecuteCommandFromQueueCommand request, CancellationToken cancellationToken)
 		{
-			request.NotNull();
-
-			//TODO: Make transactional
-
-			var command = await _commandRepository.PeekAsync(request.ExecutionId);
-
-			if (command == null)
+			try
 			{
-				return new ResultStatusDto
+				request.NotNull();
+
+				//TODO: Make transactional
+
+				var command = await _commandRepository.PeekAsync(request.ExecutionId);
+
+				if (command == null)
 				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = "Command cannot be peeked from the queue",
-					State = ResultState.QueueIsEmpty
-				};
-			}
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = "Command cannot be peeked from the queue",
+						State = ResultState.QueueIsEmpty
+					};
+				}
 
-			var executionResult = await ExecuteNext(command, request.ExecutionId);
+				var executionResult = await ExecuteNext(command, request.ExecutionId);
 
-			var result = await _commandRepository.PullAsync(request.ExecutionId);
+				var result = await _commandRepository.PullAsync(request.ExecutionId);
 
-			if (!executionResult.IsCorrect)
-			{
-				return new ResultStatusDto
+				if (!executionResult.IsCorrect)
 				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = executionResult.Error,
-					State = executionResult.State
-				};
-			}
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = executionResult.Error,
+						State = executionResult.State
+					};
+				}
 
-			if (result == null)
-			{
-				return new ResultStatusDto
+				if (result == null)
 				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = "Command cannot be pulled from the queue",
-					State = ResultState.QueueIsEmpty
-				};
-			}
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = "Command cannot be pulled from the queue",
+						State = ResultState.QueueIsEmpty
+					};
+				}
 
-			if (!result.IsValid)
-			{
-				return new ResultStatusDto
+				if (!result.IsValid)
 				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = "Validation of the command failed at the end of operation",
-					State = ResultState.Error
-				};
-			}
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = "Validation of the command failed at the end of operation",
+						State = ResultState.Error
+					};
+				}
 
-			if (!result.IsCompleted)
-			{
-				return new ResultStatusDto
+				if (!result.IsCompleted)
 				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = "Execution of the command failed at the end of operation",
-					State = ResultState.Error
-				};
-			}
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = "Execution of the command failed at the end of operation",
+						State = ResultState.Error
+					};
+				}
 
-			return new ExecutionResultStatusDto<CommandStatusDto>
-			{
-				Result = new CommandStatusDto
+				await _logAdapter.TraceAsync($"Command executed. Command state {result}", request.ExecutionId);
+
+				return new ExecutionResultStatusDto<CommandStatusDto>
 				{
+					Result = new CommandStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = true,
+						IsCompleted = result.IsCompleted,
+						IsValid = result.IsValid,
+						Type = result.Type,
+						EnergyConsumption = result.EnergyConsumption
+					},
 					ExecutionId = request.ExecutionId,
 					IsCorrect = true,
-					IsCompleted = result.IsCompleted,
-					IsValid = result.IsValid,
-					Type = result.Type,
-					EnergyConsumption = result.EnergyConsumption
-				},
-				ExecutionId = request.ExecutionId,
-				IsCorrect = true,
-				IsCompleted = true,
-				State = ResultState.Ok
-			};
+					IsCompleted = true,
+					State = ResultState.Ok
+				};
+			}
+			catch (Exception ex)
+			{
+				await _logAdapter.ErrorAsync(ex.Message, nameof(ExecuteCommandFromQueueCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
+			}
 		}
 
 		private async Task<ResultStatusDto> ExecuteNext(Command command, Guid executionId)

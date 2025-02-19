@@ -1,4 +1,5 @@
-﻿using CleaningRobot.InterfaceAdapters.Adapters;
+﻿using CleaningRobot.Entities.Interfaces;
+using CleaningRobot.InterfaceAdapters.Adapters;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases;

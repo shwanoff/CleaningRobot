@@ -4,6 +4,7 @@ using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Interfaces.Repositories;
 using Moq;
 using CleaningRobot.UseCases.Enums;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Maps
 {
@@ -12,6 +13,7 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Maps
 	{
 		private Mock<IRepository<Robot>> _robotRepositoryMock;
 		private Mock<IRepository<Map>> _mapRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private SetupRobotOnMapCommandHandler _handler;
 
 		[SetUp]
@@ -19,7 +21,8 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Maps
 		{
 			_robotRepositoryMock = new Mock<IRepository<Robot>>();
 			_mapRepositoryMock = new Mock<IRepository<Map>>();
-			_handler = new SetupRobotOnMapCommandHandler(_robotRepositoryMock.Object, _mapRepositoryMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new SetupRobotOnMapCommandHandler(_robotRepositoryMock.Object, _mapRepositoryMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

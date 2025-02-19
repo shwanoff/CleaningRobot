@@ -74,7 +74,7 @@ namespace CleaningRobot.Entities.Entities
 		/// <returns>A string that represents the current command.</returns>
 		public override string ToString()
 		{
-			return $"{Type} {EnergyConsumption}";
+			return $"{Type} {EnergyConsumption} Valid: {IsValid} Complete {IsCompleted}";
 		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using CleaningRobot.UseCases.Dto.Output;
+﻿using CleaningRobot.Entities.Interfaces;
+using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Handlers.Robots;
@@ -13,112 +14,125 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		public required Guid ExecutionId { get; set; }
 	}
 
-	public class StartCommandHandler(IMediator mediator, IBackoffRepository backoffRepository) : IRequestHandler<StartCommand, ResultStatusDto>
+	public class StartCommandHandler(IMediator mediator, IBackoffRepository backoffRepository, ILogAdapter logAdapter) : IRequestHandler<StartCommand, ResultStatusDto>
 	{
 		private readonly IBackoffRepository _backoffRepository = backoffRepository;
 		private readonly IMediator _mediator = mediator;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ResultStatusDto> Handle(StartCommand request, CancellationToken cancellationToken)
 		{
-			request.NotNull();
-
-			var setupRobotResult = await SetupRobot(request.ExecutionId);
-
-			if (!setupRobotResult.IsCorrect)
+			try
 			{
+				request.NotNull();
+
+				var setupRobotResult = await SetupRobot(request.ExecutionId);
+
+				if (!setupRobotResult.IsCorrect)
+				{
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = setupRobotResult.Error,
+						State = setupRobotResult.State
+					};
+				}
+
+				await _logAdapter.TraceAsync("Execution started", request.ExecutionId);
+
+				bool executionFinished = false;
+
+				do
+				{
+					var queueEexecutionResult = await ExecuteNextFromQueue(request.ExecutionId);
+
+					if (!queueEexecutionResult.IsCorrect)
+					{
+						switch (queueEexecutionResult.State)
+						{
+							case ResultState.OutOfEnergy:
+							case ResultState.QueueIsEmpty:
+								executionFinished = true;
+								break;
+							case ResultState.BackOff:
+								if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
+								{
+									await ConsumeEnergy(queueEexecutionResult.Error, request.ExecutionId);
+								}
+
+								bool backoffFinished = false;
+								do
+								{
+									var backoffExecutionResult = await ExecuteNextBackoffStrategy(request.ExecutionId);
+
+									switch (backoffExecutionResult.State)
+									{
+										case ResultState.BackOff:
+											if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
+											{
+												await ConsumeEnergy(backoffExecutionResult.Error, request.ExecutionId);
+											}
+											break;
+										case ResultState.Ok:
+											if (_backoffRepository.Settings.StopWhenBackOff)
+											{
+												executionFinished = true;
+											}
+
+											backoffFinished = true;
+											break;
+										case ResultState.QueueIsEmpty:
+										case ResultState.OutOfEnergy:
+											executionFinished = true;
+											break;
+										case ResultState.Error:
+										case ResultState.ValidationError:
+										case ResultState.ExecutionError:
+											return new ResultStatusDto
+											{
+												ExecutionId = request.ExecutionId,
+												IsCorrect = false,
+												Error = backoffExecutionResult.Error,
+												State = backoffExecutionResult.State
+											};
+										default:
+											throw new NotImplementedException();
+									}
+
+								} while (!backoffFinished);
+
+								continue;
+							case ResultState.Error:
+							case ResultState.ValidationError:
+							case ResultState.ExecutionError:
+								return new ResultStatusDto
+								{
+									ExecutionId = request.ExecutionId,
+									IsCorrect = false,
+									Error = queueEexecutionResult.Error,
+									State = queueEexecutionResult.State
+								};
+							default:
+								throw new NotImplementedException();
+						}
+					}
+				} while (!executionFinished);
+
+				await _logAdapter.TraceAsync("Execution finished", request.ExecutionId);
+
 				return new ResultStatusDto
 				{
 					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = setupRobotResult.Error,
-					State = setupRobotResult.State
+					IsCorrect = true,
+					State = ResultState.Ok
 				};
 			}
-
-			bool executionFinished = false;
-
-			do
+			catch (Exception ex)
 			{
-				var queueEexecutionResult = await ExecuteNextFromQueue(request.ExecutionId);
-
-				if (!queueEexecutionResult.IsCorrect)
-				{
-					switch (queueEexecutionResult.State)
-					{
-						case ResultState.OutOfEnergy:
-						case ResultState.QueueIsEmpty:
-							executionFinished = true;
-							break;
-						case ResultState.BackOff:
-							if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
-							{
-								await ConsumeEnergy(queueEexecutionResult.Error, request.ExecutionId);
-							}
-
-							bool backoffFinished = false;
-							do
-							{
-								var backoffExecutionResult = await ExecuteNextBackoffStrategy(request.ExecutionId);
-
-								switch (backoffExecutionResult.State)
-								{
-									case ResultState.BackOff:
-										if (_backoffRepository.Settings.ConsumeEnergyWhenBackOff)
-										{
-											await ConsumeEnergy(backoffExecutionResult.Error, request.ExecutionId);
-										}
-										break;
-									case ResultState.Ok:
-										if (_backoffRepository.Settings.StopWhenBackOff)
-										{
-											executionFinished = true;
-										}
-
-										backoffFinished = true;
-										break;
-									case ResultState.QueueIsEmpty:
-									case ResultState.OutOfEnergy:
-										executionFinished = true;
-										break;
-									case ResultState.Error:
-									case ResultState.ValidationError:
-									case ResultState.ExecutionError:
-										return new ResultStatusDto
-										{
-											ExecutionId = request.ExecutionId,
-											IsCorrect = false,
-											Error = backoffExecutionResult.Error,
-											State = backoffExecutionResult.State
-										};
-									default:
-										throw new NotImplementedException();
-								}
-
-							} while (!backoffFinished);
-
-							continue;
-						case ResultState.Error:
-						case ResultState.ValidationError:
-						case ResultState.ExecutionError:
-							return new ResultStatusDto
-							{
-								ExecutionId = request.ExecutionId,
-								IsCorrect = false,
-								Error = queueEexecutionResult.Error,
-								State = queueEexecutionResult.State
-							};
-						default:
-							throw new NotImplementedException();
-					}
-				}
-			} while (!executionFinished);
-
-			return new ResultStatusDto
-			{
-				ExecutionId = request.ExecutionId,
-				IsCorrect = true,
-				State = ResultState.Ok
-			};
+				await _logAdapter.ErrorAsync(ex.Message, nameof(StartCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
+			}
 		}
 
 		private async Task<ResultStatusDto> ExecuteNextBackoffStrategy(Guid executionId)

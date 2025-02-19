@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
 using CleaningRobot.UseCases.Dto.Input;
@@ -63,7 +64,7 @@ namespace CleaningRobot.InterfaceAdapters
 			}
 			catch (Exception ex)
 			{
-				await _logAdapter.ErrorAsync(ex.Message, _executionId);
+				await _logAdapter.ErrorAsync(ex.Message, $"{nameof(RobotOrchestrator)} > {nameof(ExecuteAsync)}", _executionId);
 				return new ExecutionResultDto(ex, _executionId);
 			}
 		}

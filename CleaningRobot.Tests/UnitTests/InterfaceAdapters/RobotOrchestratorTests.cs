@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.InterfaceAdapters;
 using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;

@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Commands;
@@ -17,6 +18,7 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 	{
 		private Mock<IQueueRepository<Command>> _commandRepositoryMock;
 		private Mock<IBackoffRepository> _backoffRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private ValidateCommandByCommandQueryHandler _handler;
 
 		[SetUp]
@@ -24,7 +26,8 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 		{
 			_commandRepositoryMock = new Mock<IQueueRepository<Command>>();
 			_backoffRepositoryMock = new Mock<IBackoffRepository>();
-			_handler = new ValidateCommandByCommandQueryHandler(_commandRepositoryMock.Object, _backoffRepositoryMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new ValidateCommandByCommandQueryHandler(_commandRepositoryMock.Object, _backoffRepositoryMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

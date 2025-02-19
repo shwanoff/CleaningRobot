@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Interfaces.Repositories;
@@ -12,83 +13,94 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		public required Command Command { get; set; }
 	}
 
-	public class ValidateCommandByRobotQueryHandler(IRepository<Robot> robotRepository) : IRequestHandler<ValidateCommandByRobotQuery, ValidationResultStatusDto>
+	public class ValidateCommandByRobotQueryHandler(IRepository<Robot> robotRepository, ILogAdapter logAdapter) : IRequestHandler<ValidateCommandByRobotQuery, ValidationResultStatusDto>
 	{
 		private readonly IRepository<Robot> _robotRepository = robotRepository;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ValidationResultStatusDto> Handle(ValidateCommandByRobotQuery request, CancellationToken cancellationToken)
 		{
-			if (request == null)
+			try
 			{
-				return new ValidationResultStatusDto
+				if (request == null)
 				{
-					IsCorrect = false,
-					IsValid = false,
-					Error = "Request cannot be null",
-					ExecutionId = Guid.Empty,
-					State = ResultState.ValidationError
-				};
-			}
+					return new ValidationResultStatusDto
+					{
+						IsCorrect = false,
+						IsValid = false,
+						Error = "Request cannot be null",
+						ExecutionId = Guid.Empty,
+						State = ResultState.ValidationError
+					};
+				}
 
-			if (request.Command == null)
-			{
+				if (request.Command == null)
+				{
+					return new ValidationResultStatusDto
+					{
+						IsCorrect = false,
+						IsValid = false,
+						Error = "Command cannot be null",
+						ExecutionId = request.ExecutionId,
+						State = ResultState.ValidationError
+					};
+				}
+
+				if (request.Command.EnergyConsumption < 0)
+				{
+					return new ValidationResultStatusDto
+					{
+						IsCorrect = false,
+						IsValid = false,
+						Error = "The energy consumption of a command cannot be negative",
+						ExecutionId = request.ExecutionId,
+						State = ResultState.ValidationError
+					};
+				}
+
+				var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
+
+				if (robot == null)
+				{
+					return new ValidationResultStatusDto
+					{
+						IsCorrect = false,
+						IsValid = false,
+						Error = $"Robot for execution ID {request.ExecutionId} not found.",
+						ExecutionId = request.ExecutionId,
+						State = ResultState.ValidationError
+					};
+				}
+
+				if (!IsValidCommandForRobot(request.Command, robot, out string? error))
+				{
+					return new ValidationResultStatusDto
+					{
+						IsCorrect = false,
+						IsValid = false,
+						Error = error,
+						ExecutionId = request.ExecutionId,
+						State = ResultState.OutOfEnergy
+					};
+				}
+
+				request.Command.IsValidatedByRobot = true;
+
+				await _logAdapter.TraceAsync($"Robot validated command {request.Command}. Robot state {robot}", request.ExecutionId);
+
 				return new ValidationResultStatusDto
 				{
 					IsCorrect = false,
-					IsValid = false,
-					Error = "Command cannot be null",
+					IsValid = true,
 					ExecutionId = request.ExecutionId,
-					State = ResultState.ValidationError
+					State = ResultState.Ok
 				};
 			}
-
-			if (request.Command.EnergyConsumption < 0)
+			catch (Exception ex)
 			{
-				return new ValidationResultStatusDto
-				{
-					IsCorrect = false,
-					IsValid = false,
-					Error = "The energy consumption of a command cannot be negative",
-					ExecutionId = request.ExecutionId,
-					State = ResultState.ValidationError
-				};
+				await _logAdapter.ErrorAsync(ex.Message, nameof(ValidateCommandByRobotQueryHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
 			}
-
-			var robot = await _robotRepository.GetByIdAsync(request.ExecutionId);
-
-			if (robot == null)
-			{
-				return new ValidationResultStatusDto
-				{
-					IsCorrect = false,
-					IsValid = false,
-					Error = $"Robot for execution ID {request.ExecutionId} not found.",
-					ExecutionId = request.ExecutionId,
-					State = ResultState.ValidationError
-				};
-			}
-
-			if (!IsValidCommandForRobot(request.Command, robot, out string? error))
-			{
-				return new ValidationResultStatusDto
-				{
-					IsCorrect = false,
-					IsValid = false,
-					Error = error,
-					ExecutionId = request.ExecutionId,
-					State = ResultState.OutOfEnergy
-				};
-			}
-
-			request.Command.IsValidatedByRobot = true;
-
-			return new ValidationResultStatusDto
-			{
-				IsCorrect = false,
-				IsValid = true,
-				ExecutionId = request.ExecutionId,
-				State = ResultState.Ok
-			};
 		}
 
 		private static bool IsValidCommandForRobot(Command command, Robot robot, out string? error)

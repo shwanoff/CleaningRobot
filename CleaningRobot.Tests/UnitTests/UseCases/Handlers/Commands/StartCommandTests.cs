@@ -7,6 +7,7 @@ using MediatR;
 using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Handlers.Maps;
 using CleaningRobot.UseCases.Handlers.Robots;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 {
@@ -15,6 +16,7 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 	{
 		private Mock<IMediator> _mediatorMock;
 		private Mock<IBackoffRepository> _backoffRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private StartCommandHandler _handler;
 
 		[SetUp]
@@ -22,7 +24,8 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 		{
 			_mediatorMock = new Mock<IMediator>();
 			_backoffRepositoryMock = new Mock<IBackoffRepository>();
-			_handler = new StartCommandHandler(_mediatorMock.Object, _backoffRepositoryMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new StartCommandHandler(_mediatorMock.Object, _backoffRepositoryMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

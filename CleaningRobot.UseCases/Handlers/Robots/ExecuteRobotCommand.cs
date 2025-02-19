@@ -5,6 +5,7 @@ using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Interfaces.Repositories;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.UseCases.Handlers.Robots
 {
@@ -14,50 +15,61 @@ namespace CleaningRobot.UseCases.Handlers.Robots
 		public required Command Command { get; set; }
 	}
 
-	public class ExecuteRobotCommandHandler(IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository) : IRequestHandler<ExecuteRobotCommand, ExecutionResultStatusDto<RobotStatusDto>>
+	public class ExecuteRobotCommandHandler(IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository, ILogAdapter logAdapter) : IRequestHandler<ExecuteRobotCommand, ExecutionResultStatusDto<RobotStatusDto>>
 	{
 		private readonly IRepository<Robot> _robotRepository = robotRepository;
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ExecutionResultStatusDto<RobotStatusDto>> Handle(ExecuteRobotCommand request, CancellationToken cancellationToken = default)
 		{
-			request.NotNull();
-			request.Command.NotNull();
-			request.Command.EnergyConsumption.IsPositive();
-			request.Command.IsValid.IsTrue();
-
-			var robot = await _robotRepository
-				.GetByIdAsync(request.ExecutionId)
-				.NotNull();
-
-			Execute(request.Command, robot);
-
-			request.Command.IsCompletedByRobot = true;
-
-			var commandResult = await _commandRepository
-				.UpdateFirstAsync(request.Command, request.ExecutionId)
-				.NotNull();
-
-			var result = await _robotRepository
-				.UpdateAsync(robot, request.ExecutionId)
-				.NotNull();
-
-			return new ExecutionResultStatusDto<RobotStatusDto>
+			try
 			{
-				Result = new RobotStatusDto
+				request.NotNull();
+				request.Command.NotNull();
+				request.Command.EnergyConsumption.IsPositive();
+				request.Command.IsValid.IsTrue();
+
+				var robot = await _robotRepository
+					.GetByIdAsync(request.ExecutionId)
+					.NotNull();
+
+				Execute(request.Command, robot);
+
+				request.Command.IsCompletedByRobot = true;
+
+				var commandResult = await _commandRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
+
+				var result = await _robotRepository
+					.UpdateAsync(robot, request.ExecutionId)
+					.NotNull();
+
+				await _logAdapter.TraceAsync($"Robot executed command {request.Command}. Robot state {robot}", request.ExecutionId);
+
+				return new ExecutionResultStatusDto<RobotStatusDto>
 				{
-					X = robot.Position.X,
-					Y = robot.Position.Y,
-					Facing = robot.Position.Facing,
-					Battery = robot.Battery,
+					Result = new RobotStatusDto
+					{
+						X = robot.Position.X,
+						Y = robot.Position.Y,
+						Facing = robot.Position.Facing,
+						Battery = robot.Battery,
+						IsCorrect = true,
+						ExecutionId = request.ExecutionId
+					},
 					IsCorrect = true,
-					ExecutionId = request.ExecutionId
-				},
-				IsCorrect = true,
-				ExecutionId = request.ExecutionId,
-				IsCompleted = true,
-				State = ResultState.Ok
-			};
+					ExecutionId = request.ExecutionId,
+					IsCompleted = true,
+					State = ResultState.Ok
+				};
+			}
+			catch (Exception ex)
+			{
+				await _logAdapter.ErrorAsync(ex.Message, nameof(ExecuteRobotCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
+			}
 		}
 
 		private static void Execute(Command command, Robot robot)

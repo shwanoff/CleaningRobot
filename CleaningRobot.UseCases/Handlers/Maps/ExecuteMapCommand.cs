@@ -5,6 +5,7 @@ using CleaningRobot.Entities.Enums;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Helpers;
 using CleaningRobot.UseCases.Interfaces.Repositories;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.UseCases.Handlers.Maps
 {
@@ -14,48 +15,54 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 		public required Command Command { get; set; }
 	}
 
-	public class ExecuteMapCommandHandler(IRepository<Map> mapRepository, IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository) : IRequestHandler<ExecuteMapCommand, ExecutionResultStatusDto<MapStatusDto>>
+	public class ExecuteMapCommandHandler(IRepository<Map> mapRepository, IRepository<Robot> robotRepository, IQueueRepository<Command> commandRepository, ILogAdapter logAdapter) : IRequestHandler<ExecuteMapCommand, ExecutionResultStatusDto<MapStatusDto>>
 	{
 		private readonly IRepository<Map> _mapRepository = mapRepository;
 		private readonly IRepository<Robot> _robotRepository = robotRepository;
 		private readonly IQueueRepository<Command> _commandRepository = commandRepository;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ExecutionResultStatusDto<MapStatusDto>> Handle(ExecuteMapCommand request, CancellationToken cancellationToken = default)
 		{
-			request.NotNull();
-			request.Command.NotNull();
-			request.Command.EnergyConsumption.IsPositive();
-			request.Command.IsValid.IsTrue();
-
-			var map = await _mapRepository
-				.GetByIdAsync(request.ExecutionId)
-				.NotNull();
-
-			var robot = await _robotRepository
-				.GetByIdAsync(request.ExecutionId)
-				.NotNull();
-
-			Execute(request.Command, map, robot);
-
-			request.Command.IsCompletedByMap = true;
-
-			var commandResult = await _commandRepository
-				.UpdateFirstAsync(request.Command, request.ExecutionId)
-				.NotNull();
-
-			var result = await _mapRepository
-				.UpdateAsync(map, request.ExecutionId)
-				.NotNull();
-
-			return new ExecutionResultStatusDto<MapStatusDto>
+			try
 			{
-				Result = new MapStatusDto
+				request.NotNull();
+				request.Command.NotNull();
+				request.Command.EnergyConsumption.IsPositive();
+				request.Command.IsValid.IsTrue();
+
+				var map = await _mapRepository
+					.GetByIdAsync(request.ExecutionId)
+					.NotNull();
+
+				var robot = await _robotRepository
+					.GetByIdAsync(request.ExecutionId)
+					.NotNull();
+
+				Execute(request.Command, map, robot);
+
+				request.Command.IsCompletedByMap = true;
+
+				var commandResult = await _commandRepository
+					.UpdateFirstAsync(request.Command, request.ExecutionId)
+					.NotNull();
+
+				var result = await _mapRepository
+					.UpdateAsync(map, request.ExecutionId)
+					.NotNull();
+
+				await _logAdapter.TraceAsync($"Map executed command {request.Command}. Map state {map}", request.ExecutionId);
+				await _logAdapter.DebugAsync(map.Draw(), request.ExecutionId);
+
+				return new ExecutionResultStatusDto<MapStatusDto>
 				{
-					ExecutionId = request.ExecutionId,
-					Width = result.Width,
-					Height = result.Height,
-					IsCorrect = true,
-					Cells = [.. result.Cells.Cast<Cell>()
+					Result = new MapStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						Width = result.Width,
+						Height = result.Height,
+						IsCorrect = true,
+						Cells = [.. result.Cells.Cast<Cell>()
 					.Select(c => new CellStatusDto
 					{
 						X = c.Position.X,
@@ -65,12 +72,18 @@ namespace CleaningRobot.UseCases.Handlers.Maps
 						ExecutionId = request.ExecutionId,
 						IsCorrect = true,
 					})]
-				},
-				IsCorrect = true,
-				IsCompleted = true,
-				ExecutionId = request.ExecutionId,
-				State = ResultState.Ok
-			};
+					},
+					IsCorrect = true,
+					IsCompleted = true,
+					ExecutionId = request.ExecutionId,
+					State = ResultState.Ok
+				};
+			}
+			catch (Exception ex)
+			{
+				await _logAdapter.ErrorAsync(ex.Message, nameof(ExecuteMapCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
+			}
 		}
 
 		private static void Execute(Command command, Map map, Robot robot)

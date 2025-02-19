@@ -1,5 +1,6 @@
 ﻿using CleaningRobot.Entities.Entities;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Input;
 using CleaningRobot.UseCases.Handlers.Commands;
 using CleaningRobot.UseCases.Interfaces.Repositories;
@@ -11,13 +12,15 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 	public class SetupBackoffStrategyCommandTests
 	{
 		private Mock<IBackoffRepository> _backoffRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private SetupBackoffStrategyCommandHandler _handler;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_backoffRepositoryMock = new Mock<IBackoffRepository>();
-			_handler = new SetupBackoffStrategyCommandHandler(_backoffRepositoryMock.Object);
+			_logAdapterMock = new Mock<ILogAdapter>();
+			_handler = new SetupBackoffStrategyCommandHandler(_backoffRepositoryMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

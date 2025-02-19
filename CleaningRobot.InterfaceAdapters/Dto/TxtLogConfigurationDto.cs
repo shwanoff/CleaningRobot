@@ -9,6 +9,7 @@
 	public class LogLevelConfiguration
 	{
 		public required bool Trace { get; set; }
+		public required bool Debug { get; set; }
 		public required bool Info { get; set; }
 		public required bool Warning { get; set; }
 		public required bool Error { get; set; }

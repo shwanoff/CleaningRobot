@@ -1,4 +1,5 @@
-﻿using CleaningRobot.InterfaceAdapters.Dto;
+﻿using CleaningRobot.Entities.Interfaces;
+using CleaningRobot.InterfaceAdapters.Dto;
 using CleaningRobot.InterfaceAdapters.Interfaces;
 
 namespace CleaningRobot.InterfaceAdapters.Adapters
@@ -8,11 +9,11 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 		private readonly IFileAdapter _fileAdapter = fileAdapter;
 		private readonly TxtLogConfigurationDto _configuration = configuration;
 
-		public async Task ErrorAsync(string message, Guid executionId, Exception? exception = null)
+		public async Task ErrorAsync(string message, string location, Guid executionId, Exception? exception = null)
 		{
 			if (_configuration.LogLevel.Error)
 			{
-				await Write(message, "Error", executionId);
+				await Write($"{location}: {message}", "Error", executionId);
 			}
 		}
 
@@ -36,7 +37,15 @@ namespace CleaningRobot.InterfaceAdapters.Adapters
 		{
 			if (_configuration.LogLevel.Trace)
 			{
-				await Write(message, "Info", executionId);
+				await Write(message, "Trace", executionId);
+			}
+		}
+
+		public async Task DebugAsync(string message, Guid executionId)
+		{
+			if (_configuration.LogLevel.Debug)
+			{
+				await Write(message, "Debug", executionId);
 			}
 		}
 

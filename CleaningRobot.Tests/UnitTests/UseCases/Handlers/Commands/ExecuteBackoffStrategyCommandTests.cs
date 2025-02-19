@@ -6,6 +6,7 @@ using CleaningRobot.UseCases.Interfaces.Repositories;
 using Moq;
 using MediatR;
 using CleaningRobot.Entities.Enums;
+using CleaningRobot.Entities.Interfaces;
 
 namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 {
@@ -13,6 +14,7 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 	public class ExecuteBackoffStrategyCommandTests
 	{
 		private Mock<IBackoffRepository> _backoffRepositoryMock;
+		private Mock<ILogAdapter> _logAdapterMock;
 		private Mock<IMediator> _mediatorMock;
 		private ExecuteBackoffStrategyCommandHandler _handler;
 
@@ -20,8 +22,9 @@ namespace CleaningRobot.Tests.UnitTests.UseCases.Handlers.Commands
 		public void SetUp()
 		{
 			_backoffRepositoryMock = new Mock<IBackoffRepository>();
+			_logAdapterMock = new Mock<ILogAdapter>();
 			_mediatorMock = new Mock<IMediator>();
-			_handler = new ExecuteBackoffStrategyCommandHandler(_backoffRepositoryMock.Object, _mediatorMock.Object);
+			_handler = new ExecuteBackoffStrategyCommandHandler(_backoffRepositoryMock.Object, _mediatorMock.Object, _logAdapterMock.Object);
 		}
 
 		[Test]

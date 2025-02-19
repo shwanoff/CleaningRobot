@@ -1,4 +1,5 @@
 ﻿using CleaningRobot.Entities.Entities;
+using CleaningRobot.Entities.Interfaces;
 using CleaningRobot.UseCases.Dto.Output;
 using CleaningRobot.UseCases.Enums;
 using CleaningRobot.UseCases.Handlers.Maps;
@@ -15,47 +16,62 @@ namespace CleaningRobot.UseCases.Handlers.Commands
 		public required bool Backoff { get; set; }
 	}
 
-	public class ExecuteNextCommandHandler(IMediator mediator) : IRequestHandler<ExecuteNextCommand, ResultStatusDto>
+	public class ExecuteNextCommandHandler(IMediator mediator, ILogAdapter logAdapter) : IRequestHandler<ExecuteNextCommand, ResultStatusDto>
 	{
 		private readonly IMediator _mediator = mediator;
+		private readonly ILogAdapter _logAdapter = logAdapter;
 
 		public async Task<ResultStatusDto> Handle(ExecuteNextCommand request, CancellationToken cancellationToken)
 		{
-			request.NotNull();
-			request.Command.NotNull();
-
-			var validationResult = await ValidateCommand(request.Command, request.Backoff, request.ExecutionId);
-
-			if (!validationResult.IsCorrect || !validationResult.IsValid)
+			try
 			{
+				request.NotNull();
+				request.Command.NotNull();
+
+				var validationResult = await ValidateCommand(request.Command, request.Backoff, request.ExecutionId);
+
+				if (!validationResult.IsCorrect || !validationResult.IsValid)
+				{
+					await _logAdapter.WarningAsync($"Command validation failed. Command {request.Command}. Error {validationResult.Error}", request.ExecutionId);
+
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = validationResult.Error,
+						State = validationResult.State
+					};
+				}
+
+				var executionResult = await ExecuteCommand<ResultStatusDto>(request.Command, request.Backoff, request.ExecutionId);
+
+				if (!executionResult.IsCorrect)
+				{
+					await _logAdapter.WarningAsync($"Command execution failed. Command {request.Command}. Error {executionResult.Error}", request.ExecutionId);
+
+					return new ResultStatusDto
+					{
+						ExecutionId = request.ExecutionId,
+						IsCorrect = false,
+						Error = executionResult.Error,
+						State = ResultState.ExecutionError
+					};
+				}
+
+				await _logAdapter.TraceAsync($"Command executed. Command {request.Command}", request.ExecutionId);
+
 				return new ResultStatusDto
 				{
 					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = validationResult.Error,
-					State = validationResult.State
+					IsCorrect = true,
+					State = ResultState.Ok
 				};
 			}
-
-			var executionResult = await ExecuteCommand<ResultStatusDto>(request.Command, request.Backoff, request.ExecutionId);
-
-			if (!executionResult.IsCorrect)
+			catch (Exception ex)
 			{
-				return new ResultStatusDto
-				{
-					ExecutionId = request.ExecutionId,
-					IsCorrect = false,
-					Error = executionResult.Error,
-					State = ResultState.ExecutionError
-				};
+				await _logAdapter.ErrorAsync(ex.Message, nameof(ExecuteNextCommandHandler), request?.ExecutionId ?? Guid.Empty, ex);
+				throw;
 			}
-
-			return new ResultStatusDto
-			{
-				ExecutionId = request.ExecutionId,
-				IsCorrect = true,
-				State = ResultState.Ok
-			};
 		}
 
 		private async Task<ValidationResultStatusDto> ValidateCommand(Command command, bool backoff, Guid executionId)

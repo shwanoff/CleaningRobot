@@ -1,4 +1,4 @@
-﻿namespace CleaningRobot.InterfaceAdapters.Interfaces
+﻿namespace CleaningRobot.Entities.Interfaces
 {
 	/// <summary>
 	/// Provides methods for logging messages with different severity levels.
@@ -12,6 +12,8 @@
 		/// <param name="executionId">The unique identifier for the execution context.</param>
 		/// <returns>A task that represents the asynchronous operation.</returns>
 		Task TraceAsync(string message, Guid executionId);
+
+		Task DebugAsync(string message, Guid executionId);
 
 		/// <summary>
 		/// Logs an informational message asynchronously.
@@ -36,6 +38,6 @@
 		/// <param name="executionId">The unique identifier for the execution context.</param>
 		/// <param name="exception">The exception to log (optional).</param>
 		/// <returns>A task that represents the asynchronous operation.</returns>
-		Task ErrorAsync(string message, Guid executionId, Exception? exception = null);
+		Task ErrorAsync(string message, string location, Guid executionId, Exception? exception = null);
 	}
 }

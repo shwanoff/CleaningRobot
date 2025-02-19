@@ -25,6 +25,7 @@ namespace CleaningRobot.Tests.UnitTests.InterfaceAdapters.Adapters
 				LogLevel = new LogLevelConfiguration
 				{
 					Trace = true,
+					Debug = true,
 					Info = true,
 					Warning = true,
 					Error = true
@@ -54,7 +55,7 @@ namespace CleaningRobot.Tests.UnitTests.InterfaceAdapters.Adapters
 			var message = "Error message";
 			var executionId = Guid.NewGuid();
 
-			await _txtLogAdapter.ErrorAsync(message, executionId);
+			await _txtLogAdapter.ErrorAsync(message, nameof(ErrorAsync_LogsErrorMessage), executionId);
 
 			_fileAdapterMock.Verify(f => f.WriteAsync(It.IsAny<string>(), It.Is<string>(s => s.Contains(message)), false), Times.Once);
 		}
