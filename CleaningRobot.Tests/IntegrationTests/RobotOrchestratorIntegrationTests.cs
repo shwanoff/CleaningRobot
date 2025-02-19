@@ -34,7 +34,7 @@ namespace CleaningRobot.Tests.IntegrationTests
 
 			var configuration = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("TestData\\Inputs\\testsettings.json", optional: false, reloadOnChange: true)
+				.AddJsonFile("TestData/Inputs/testsettings.json", optional: false, reloadOnChange: true)
 				.Build();
 
 			var services = new ServiceCollection()
@@ -70,8 +70,8 @@ namespace CleaningRobot.Tests.IntegrationTests
 				_backOffStrategiesConfig);
 		}
 
-		[TestCase("TestData\\Inputs\\test1.json", "TestData\\Actual\\test1_actual_result.json", "TestData\\Results\\test1_result.json")]
-		[TestCase("TestData\\Inputs\\test2.json", "TestData\\Actual\\test2_actual_result.json", "TestData\\Results\\test2_result.json")]
+		[TestCase("TestData/Inputs/test1.json", "TestData/Actual/test1_actual_result.json", "TestData/Results/test1_result.json")]
+		[TestCase("TestData/Inputs/test2.json", "TestData/Actual/test2_actual_result.json", "TestData/Results/test2_result.json")]
 		public async Task ExecuteAsync_WithTestInput_ReturnsExpectedResult(string inputFilePath, string outputFilePath, string expectedOutputFilePath)
 		{
 			// Arrange
