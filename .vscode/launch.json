@@ -1,0 +1,27 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: Cleaning Robot Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/CleaningRobot/bin/Debug/net9.0/CleaningRobot.exe",
+            "args": [
+                "${workspaceFolder}/CleaningRobot.Tests/TestData/Inputs/test1.json",
+                "${workspaceFolder}/CleaningRobot.Tests/TestData/ActualResults/test1_result.json"
+            ],
+            "cwd": "${workspaceFolder}/CleaningRobot/bin/Debug/net9.0",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "logging": {
+                "engineLogging": false
+            },
+            "internalConsoleOptions": "openOnSessionStart",
+            "postDebugTask": "clean-actual-results"
+        }
+    ]
+}
